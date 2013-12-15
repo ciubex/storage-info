@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:summary="@string/settings_summary"
+    android:title="@string/settings_title" >
+
+    <PreferenceCategory android:title="@string/general_settings" >
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="enableNotifications"
+            android:summary="@string/enable_notifications_desc"
+            android:title="@string/enable_notifications" />
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="enableStorageInfo"
+            android:summary="@string/enable_storage_info_desc"
+            android:title="@string/enable_storage_info" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/other" >
+        <Preference
+            android:key="showLicense"
+            android:persistent="false"
+            android:summary="@string/show_license_desc"
+            android:title="@string/show_license" />
+        <Preference
+            android:key="showAbout"
+            android:persistent="false"
+            android:summary="@string/about_desc"
+            android:title="@string/about" />
+        <Preference
+            android:key="makeDonation"
+            android:persistent="false"
+            android:summary="@string/donate_btn_message"
+            android:title="@string/donate_btn_title" />
+    </PreferenceCategory>
+
+</PreferenceScreen>
