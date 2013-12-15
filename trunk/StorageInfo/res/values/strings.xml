@@ -12,6 +12,8 @@
     <string name="notification_message">See storage settings</string>
     
     <!-- Settings -->
+    <string name="show_storage_info">Show Storage Settings</string>
+    <string name="show_storage_info_desc">Go to the Storage Settings</string>
     <string name="settings_title">Storage Info</string>
     <string name="settings_summary">Storage Info settings</string>
     <string name="general_settings">Settings</string>
@@ -26,17 +28,17 @@
     <string name="show_license">Show License</string>
     <string name="show_license_desc">GNU General Public License</string>
     
-    <!-- About -->
-    <string name="about_storage_info">About Storage Info</string>
-    <string name="about">About</string>
-    <string name="about_desc">About this application</string>
-    <string name="about_text">About this application</string>
-    
     <!-- Donation -->
     <string name="donate_btn_title">Donate</string>
     <string name="donate_btn_message">Only if you want to appreciate my work.</string>
     <string name="donate_title">Donation confirmation</string>
     <string name="donate_message">If you appreciate this application, please do a donation!\nPressing YES button, you will be sent using your default browser to a PayPal donnation page.\nThank you for using this application!</string>
     <string name="donate_url"><Data><![CDATA[https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=claudiu_ciobotariu%40yahoo%2ecom&lc=RO&item_name=Ciubex&item_number=Storage%20Info%20Donation&currency_code=EUR&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted]]></Data></string>
+    
+    <!-- About -->
+    <string name="about_storage_info">About Storage Info</string>
+    <string name="about">About</string>
+    <string name="about_desc">About this application</string>
+    <string name="about_text">This application is will create a shortcut for the Storage Settings on the Notification bar when an USB mass storage is connected to an Android device which support USB-OTG.</string>
 
 </resources>

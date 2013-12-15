@@ -3,6 +3,12 @@
     android:summary="@string/settings_summary"
     android:title="@string/settings_title" >
 
+    <Preference
+        android:key="showStorageInfo"
+        android:persistent="false"
+        android:summary="@string/show_storage_info_desc"
+        android:title="@string/show_storage_info" />
+
     <PreferenceCategory android:title="@string/general_settings" >
         <CheckBoxPreference
             android:defaultValue="true"

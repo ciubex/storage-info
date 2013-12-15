@@ -27,6 +27,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.provider.Settings;
 
 /**
  * This is settings preference activity.
@@ -53,6 +54,14 @@ public class StorageInfoPreferences extends PreferenceActivity {
 	 * Prepare preference handler
 	 */
 	private void prepareCommands() {
+		((Preference) findPreference("showStorageInfo"))
+				.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+
+					@Override
+					public boolean onPreferenceClick(Preference preference) {
+						return onShowStorageInfo();
+					}
+				});
 		((Preference) findPreference("showLicense"))
 				.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
@@ -77,6 +86,19 @@ public class StorageInfoPreferences extends PreferenceActivity {
 						return onMakeDonation();
 					}
 				});
+	}
+
+	/**
+	 * Show the Storage Info activity.
+	 * 
+	 * @return Always true.
+	 */
+	private boolean onShowStorageInfo() {
+		Intent intent = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
+		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		startActivity(intent);
+		finish();
+		return true;
 	}
 
 	/**
