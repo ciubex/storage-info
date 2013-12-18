@@ -19,6 +19,7 @@
 package ro.ciubex.storageinfo;
 
 import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,7 +30,9 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -141,12 +144,12 @@ public class StorageInfoApplication extends Application {
 	 *            The intend with the action.
 	 * @return True if is mounted an USB device, otherwise false.
 	 */
-	public boolean checkUsbEvent(Intent intent) {
+	public boolean checkUsbEvent(Context context, Intent intent) {
 		boolean result = false;
 		if (intent != null) {
 			String action = intent.getAction();
 			if ("android.intent.action.MEDIA_MOUNTED".contains(action)) {
-				if (isUsbDeviceConnected() && isEnableNotifications()
+				if (isUsbDeviceConnected(context) && isEnableNotifications()
 						&& !isShowNotification()) {
 					showNotification();
 				}
@@ -155,7 +158,7 @@ public class StorageInfoApplication extends Application {
 					|| "android.intent.action.MEDIA_BAD_REMOVAL".equals(action)
 					|| "android.intent.action.MEDIA_EJECT".equals(action)
 					|| "android.intent.action.MEDIA_REMOVED".equals(action)) {
-				if (!isUsbDeviceConnected() && isShowNotification()) {
+				if (!isUsbDeviceConnected(context) && isShowNotification()) {
 					hideNotification();
 				}
 			}
@@ -168,9 +171,25 @@ public class StorageInfoApplication extends Application {
 	 * 
 	 * @return True if is an USB device connected.
 	 */
-	public boolean isUsbDeviceConnected() {
-		UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
-		HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
-		return (deviceList != null) ? deviceList.size() > 0 : false;
+	public boolean isUsbDeviceConnected(Context context) {
+		UsbManager manager = (UsbManager) context
+				.getSystemService(Context.USB_SERVICE);
+		HashMap<String, UsbDevice> devices = manager.getDeviceList();
+		if (devices != null && devices.size() > 0) {
+			UsbDevice device;
+			UsbInterface usbInterface;
+			int i, count;
+			for (Entry<String, UsbDevice> entry : devices.entrySet()) {
+				device = entry.getValue();
+				count = device.getInterfaceCount();
+				for (i = 0; i < count; i++) {
+					usbInterface = device.getInterface(i);
+					if (UsbConstants.USB_CLASS_MASS_STORAGE == usbInterface.getInterfaceClass()) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 }
