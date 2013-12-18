@@ -4,13 +4,12 @@
     <string name="app_name">Storage Info</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
-    
     <string name="settings">Settings</string>
-    
+
     <!-- Notifications -->
     <string name="notification_title">Media storage</string>
     <string name="notification_message">See storage settings</string>
-    
+
     <!-- Settings -->
     <string name="show_storage_info">Show Storage Settings</string>
     <string name="show_storage_info_desc">Go to the Storage Settings</string>
@@ -22,23 +21,31 @@
     <string name="enable_storage_info">Enable Storage Info</string>
     <string name="enable_storage_info_desc">By checking this the application will open your phone Storage Info when an USB storage is pluged. Otherwise will be open this settings window.</string>
     <string name="other">Other</string>
-    
+
     <!-- License -->
     <string name="license">License</string>
     <string name="show_license">Show License</string>
     <string name="show_license_desc">GNU General Public License</string>
-    
+
     <!-- Donation -->
     <string name="donate_btn_title">Donate</string>
     <string name="donate_btn_message">Only if you want to appreciate my work.</string>
     <string name="donate_title">Donation confirmation</string>
     <string name="donate_message">If you appreciate this application, please do a donation!\nPressing YES button, you will be sent using your default browser to a PayPal donnation page.\nThank you for using this application!</string>
     <string name="donate_url"><Data><![CDATA[https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=claudiu_ciobotariu%40yahoo%2ecom&lc=RO&item_name=Ciubex&item_number=Storage%20Info%20Donation&currency_code=EUR&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted]]></Data></string>
-    
+
     <!-- About -->
     <string name="about_storage_info">About Storage Info</string>
     <string name="about">About</string>
     <string name="about_desc">About this application</string>
-    <string name="about_text">This application is will create a shortcut for the Storage Settings on the Notification bar when an USB mass storage is connected to an Android device which support USB-OTG.</string>
+    <string name="about_text"><Data>
+<![CDATA[
+        Because my phone have support for USB-OTG (<a href="http://en.wikipedia.org/wiki/USB_On-The-Go">USB On-The-Go</a>), but do not have a quick way to unmount an attached USB device, I made this application.<br/>
+        This is an open source application. The sources are available here: <a href="https://code.google.com/p/storage-info/">https://code.google.com/p/storage-info/</a><br/><br/>
+        This application will create a shortcut for the Storage Settings on the Notification bar when an USB mass storage is connected to an Android device which support USB-OTG.<br/>
+		Normaly the Storage Settings should be accessbile from your Settings menu.<br/><br/>
+		<font color=#cc0029>This application will not</font> add to your device host support, read device manual to see if the device support USB-OTG. In some cases the USB-OTG could be enabled by using a custom ROM.<br/><br/>
+		<font color=#cc0029>This application will not</font> mount or unmount an USB storage device, that\'s Storage Settings for.]]>
+</Data></string>
 
 </resources>

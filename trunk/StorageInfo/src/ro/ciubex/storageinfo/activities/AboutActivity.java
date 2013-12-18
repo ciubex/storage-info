@@ -21,6 +21,9 @@ package ro.ciubex.storageinfo.activities;
 import ro.ciubex.storageinfo.R;
 import android.app.Activity;
 import android.os.Bundle;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
+import android.widget.TextView;
 
 /**
  * This is About activity.
@@ -36,5 +39,15 @@ public class AboutActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.about_layout);
+		prepareHtmlText();
+	}
+
+	/**
+	 * Prepare the HTML text for the about text.
+	 */
+	private void prepareHtmlText() {
+		TextView textView = (TextView) findViewById(R.id.aboutTextView);
+		textView.setText(Html.fromHtml(getString(R.string.about_text)));
+		textView.setMovementMethod(LinkMovementMethod.getInstance());
 	}
 }

@@ -59,7 +59,7 @@ public class IntroActivity extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		if (mApplication.isUsbDeviceConnected()
+		if (mApplication.isUsbDeviceConnected(this)
 				&& mApplication.isEnableStorageInfo()) {
 			showStorageSettings();
 		} else {
