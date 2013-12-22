@@ -62,6 +62,15 @@ public class StorageInfoPreferences extends PreferenceActivity {
 						return onShowStorageInfo();
 					}
 				});
+
+		((Preference) findPreference("toggleNotification"))
+				.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+
+					@Override
+					public boolean onPreferenceClick(Preference preference) {
+						return onToggleNotification();
+					}
+				});
 		((Preference) findPreference("showLicense"))
 				.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
@@ -98,6 +107,20 @@ public class StorageInfoPreferences extends PreferenceActivity {
 		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		startActivity(intent);
 		finish();
+		return true;
+	}
+
+	/**
+	 * Toggle notification shortcut.
+	 * 
+	 * @return Always true.
+	 */
+	private boolean onToggleNotification() {
+		if (application.isShowNotification()) {
+			application.hideNotification();
+		} else {
+			application.showNotification();
+		}
 		return true;
 	}
 
