@@ -37,6 +37,7 @@ import android.hardware.usb.UsbManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
+import android.widget.Toast;
 
 /**
  * This is main application.
@@ -51,6 +52,7 @@ public class StorageInfoApplication extends Application {
 	private static final String SHOW_NOTIFICATION = "showNotification";
 	private static final String ENABLE_NOTIFICATIONS = "enableNotifications";
 	private static final String ENABLE_STORAGE_INFO = "enableStorageInfo";
+	private static final String DEBUGGING_ENABLED = "debuggingEnabled";
 	private static final int NOTIFICATION_ID = 0;
 
 	/**
@@ -148,6 +150,7 @@ public class StorageInfoApplication extends Application {
 		boolean result = false;
 		if (intent != null) {
 			String action = intent.getAction();
+			showDebuggingMessage(context, action);
 			if ("android.intent.action.MEDIA_MOUNTED".contains(action)) {
 				if (isUsbDeviceConnected(context) && isEnableNotifications()
 						&& !isShowNotification()) {
@@ -157,7 +160,13 @@ public class StorageInfoApplication extends Application {
 			} else if ("android.intent.action.MEDIA_UNMOUNTED".equals(action)
 					|| "android.intent.action.MEDIA_BAD_REMOVAL".equals(action)
 					|| "android.intent.action.MEDIA_EJECT".equals(action)
-					|| "android.intent.action.MEDIA_REMOVED".equals(action)) {
+					|| "android.intent.action.MEDIA_REMOVED".equals(action)
+					|| "android.hardware.usb.action.USB_DEVICE_DETACHED"
+							.equals(action)
+					|| "android.hardware.usb.action.USB_ACCESSORY_DETACHED"
+							.equals(action)
+					|| "com.sonyericsson.hardware.action.USB_OTG_DEVICE_DISCONNECTED"
+							.equals(action)) {
 				if (!isUsbDeviceConnected(context) && isShowNotification()) {
 					hideNotification();
 				}
@@ -184,12 +193,47 @@ public class StorageInfoApplication extends Application {
 				count = device.getInterfaceCount();
 				for (i = 0; i < count; i++) {
 					usbInterface = device.getInterface(i);
-					if (UsbConstants.USB_CLASS_MASS_STORAGE == usbInterface.getInterfaceClass()) {
+					if (UsbConstants.USB_CLASS_MASS_STORAGE == usbInterface
+							.getInterfaceClass()) {
 						return true;
 					}
 				}
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Check if is enabled debugging support.
+	 * 
+	 * @return True if debugging is enabled.
+	 */
+	public boolean isDebuggingEnabled() {
+		return sharedPreferences.getBoolean(DEBUGGING_ENABLED, true);
+	}
+
+	/**
+	 * Show a debugging message on the screen.
+	 * 
+	 * @param message
+	 *            Message to be show on the screen.
+	 */
+	public void showDebuggingMessage(Context context, String message) {
+		if (isDebuggingEnabled()) {
+			showToastMessage(context,
+					getString(R.string.debug_message, ""+message));
+		}
+	}
+
+	/**
+	 * Show a toast message.
+	 * 
+	 * @param context
+	 *            The context for the message to be show.
+	 * @param message
+	 *            The message to be show.
+	 */
+	public void showToastMessage(Context context, String message) {
+		Toast.makeText(context, message, Toast.LENGTH_LONG).show();
 	}
 }

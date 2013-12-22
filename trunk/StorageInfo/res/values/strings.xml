@@ -21,6 +21,11 @@
     <string name="enable_storage_info">Enable Storage Info</string>
     <string name="enable_storage_info_desc">By checking this the application will open your phone Storage Info when an USB storage is pluged. Otherwise will be open this settings window.</string>
     <string name="other">Other</string>
+    <string name="toggle_notification">Toggle notification</string>
+    <string name="toggle_notification_desc">Use this to show or hide the notification shortcut to the Storage settings.</string>
+    <string name="enable_debugging">Enable debugging.</string>
+    <string name="enable_debugging_desc">By checking this you will enable debugging support. You will see some toast messages on the screen with device events. In format: Storage Info: android.intent&#8230;</string>
+    <string name="debug_message">Storage Info: %s</string>
 
     <!-- License -->
     <string name="license">License</string>
