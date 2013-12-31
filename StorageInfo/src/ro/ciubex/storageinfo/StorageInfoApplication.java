@@ -209,7 +209,7 @@ public class StorageInfoApplication extends Application {
 	 * @return True if debugging is enabled.
 	 */
 	public boolean isDebuggingEnabled() {
-		return sharedPreferences.getBoolean(DEBUGGING_ENABLED, true);
+		return sharedPreferences.getBoolean(DEBUGGING_ENABLED, false);
 	}
 
 	/**
@@ -221,7 +221,7 @@ public class StorageInfoApplication extends Application {
 	public void showDebuggingMessage(Context context, String message) {
 		if (isDebuggingEnabled()) {
 			showToastMessage(context,
-					getString(R.string.debug_message, ""+message));
+					getString(R.string.debug_message, "" + message));
 		}
 	}
 
