@@ -20,6 +20,11 @@
             android:key="enableStorageInfo"
             android:summary="@string/enable_storage_info_desc"
             android:title="@string/enable_storage_info" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="enableQuickStorageAccess"
+            android:summary="@string/enable_quick_storage_access_info_desc"
+            android:title="@string/enable_quick_storage_access_info" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/other" >
         <Preference
@@ -27,11 +32,13 @@
             android:persistent="false"
             android:summary="@string/toggle_notification_desc"
             android:title="@string/toggle_notification" />
+
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="debuggingEnabled"
             android:summary="@string/enable_debugging_desc"
             android:title="@string/enable_debugging" />
+
         <Preference
             android:key="showLicense"
             android:persistent="false"

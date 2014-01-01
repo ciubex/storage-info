@@ -4,11 +4,13 @@
     <string name="app_name">Storage Info</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
     <string name="settings">Settings</string>
 
     <!-- Notifications -->
-    <string name="notification_title">Media storage</string>
-    <string name="notification_message">See storage settings</string>
+    <string name="notification_title">Click to:</string>
+    <string name="notification_message">see storage settings</string>
 
     <!-- Settings -->
     <string name="show_storage_info">Show Storage Settings</string>
@@ -20,12 +22,24 @@
     <string name="enable_notifications_desc">Enable notification to launch the storage when an USB storage is pluged.</string>
     <string name="enable_storage_info">Enable Storage Info</string>
     <string name="enable_storage_info_desc">By checking this the application will open your phone Storage Info when an USB storage is pluged. Otherwise will be open this settings window.</string>
+    <string name="enable_quick_storage_access_info">Enable quick storage access.</string>
+    <string name="enable_quick_storage_access_info_desc">By checking this on the notification will be created a quick access to mounting or unmounting USB storage. Uncheck this if you have issues with quick mount or unmount.</string>
     <string name="other">Other</string>
     <string name="toggle_notification">Toggle notification</string>
     <string name="toggle_notification_desc">Use this to show or hide the notification shortcut to the Storage settings.</string>
     <string name="enable_debugging">Enable debugging.</string>
     <string name="enable_debugging_desc">By checking this you will enable debugging support. You will see some toast messages on the screen with device events. In format: Storage Info: android.intent&#8230;</string>
     <string name="debug_message">Storage Info: %s</string>
+
+    <!-- Storage activity dialog -->
+    <string name="quick_notification_mount">mount the USB storage.</string>
+    <string name="quick_notification_unmount">unmount the USB storage.</string>
+    <string name="confirm_mount_title">Mount USB storage</string>
+    <string name="confirm_mount_text">Mount the USB storage.</string>
+    <string name="confirm_unmount_title">Unmount USB storage</string>
+    <string name="confirm_unmount_text">If you unmount the USB storage, some applications that you are using will stop and may be unavailable until you remount the USB storage.</string>
+    <string name="error_unmount_title">Unmounting USB storage failed</string>
+    <string name="error_unmount_text">Cannot unmount USB storage. Try again later.</string>
 
     <!-- License -->
     <string name="license">License</string>
@@ -47,8 +61,10 @@
 <![CDATA[
         Because my phone have support for USB-OTG (<a href="http://en.wikipedia.org/wiki/USB_On-The-Go">USB On-The-Go</a>), but do not have a quick way to unmount an attached USB device, I made this application.<br/>
         This is an open source application. The sources are available here: <a href="https://code.google.com/p/storage-info/">https://code.google.com/p/storage-info/</a><br/><br/>
-        This application will create a shortcut for the Storage Settings on the Notification bar when an USB mass storage is connected to an Android device which support USB-OTG.<br/>
+        This application will create a shortcut to access the Storage Settings from the Notification bar when an USB mass storage is connected to an Android device which support USB-OTG.<br/>
 		Normaly the Storage Settings should be accessbile from your Settings menu.<br/><br/>
+		Starting with the version 2.0 is possible to access a quick mounting and unmounting dialog from the Notification bar.<br/>
+		If this new feature is crashing, please unplug any USB device attached and uncheck the "Enable quick storage access.".<br/><br/>
 		<font color=#cc0029>This application will not</font> add to your device host support, read device manual to see if the device support USB-OTG. In some cases the USB-OTG could be enabled by using a custom ROM.<br/><br/>
 		<font color=#cc0029>This application will not</font> mount or unmount an USB storage device, that\'s Storage Settings for.]]>
 </Data></string>

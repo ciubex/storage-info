@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ro.ciubex.storageinfo"
-    android:versionCode="5"
-    android:versionName="1.4" >
+    android:versionCode="6"
+    android:versionName="2.0" >
 
     <uses-sdk
         android:minSdkVersion="12"
@@ -11,6 +11,7 @@
     <uses-feature android:name="android.hardware.usb.host" />
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
 
     <application
         android:name="ro.ciubex.storageinfo.StorageInfoApplication"
@@ -29,6 +30,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="ro.ciubex.storageinfo.activities.StorageActivity"
+            android:theme="@android:style/Theme.Dialog"
+            android:label="@string/confirm_unmount_title" />
         <activity
             android:name="ro.ciubex.storageinfo.activities.StorageInfoPreferences"
             android:label="@string/settings" />
