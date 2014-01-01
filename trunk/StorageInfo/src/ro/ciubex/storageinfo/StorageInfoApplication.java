@@ -23,6 +23,8 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import ro.ciubex.storageinfo.activities.StorageActivity;
+import ro.ciubex.storageinfo.background.Utils.MountService;
 import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -34,6 +36,7 @@ import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
@@ -48,12 +51,23 @@ import android.widget.Toast;
 public class StorageInfoApplication extends Application {
 	private static Logger logger = Logger
 			.getLogger(StorageInfoApplication.class.getName());
-	private SharedPreferences sharedPreferences;
+	private SharedPreferences mSharedPreferences;
 	private static final String SHOW_NOTIFICATION = "showNotification";
 	private static final String ENABLE_NOTIFICATIONS = "enableNotifications";
 	private static final String ENABLE_STORAGE_INFO = "enableStorageInfo";
+	private static final String ENABLE_QUICK_STORAGE_ACCESS = "enableQuickStorageAccess";
 	private static final String DEBUGGING_ENABLED = "debuggingEnabled";
 	private static final int NOTIFICATION_ID = 0;
+	private NotificationManager mNotificationManager;
+	private NotificationCompat.Builder mNotifBuilder;
+	private Object mMountService;
+	private String mStoragePath;
+
+	public enum STORAGE_STATE {
+		OTHER, MOUNTED, UNMOUNTED
+	};
+
+	private STORAGE_STATE mStorageState;
 
 	/**
 	 * This method is invoked when the application is created.
@@ -64,7 +78,9 @@ public class StorageInfoApplication extends Application {
 	public void onCreate() {
 		super.onCreate();
 		logger.log(Level.INFO, "StorageInfoApplication started!");
-		sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+		mSharedPreferences = PreferenceManager
+				.getDefaultSharedPreferences(this);
+		mStorageState = STORAGE_STATE.OTHER;
 	}
 
 	/**
@@ -73,7 +89,7 @@ public class StorageInfoApplication extends Application {
 	 * @return True if the notification is showed.
 	 */
 	public boolean isShowNotification() {
-		return sharedPreferences.getBoolean(SHOW_NOTIFICATION, false);
+		return mSharedPreferences.getBoolean(SHOW_NOTIFICATION, false);
 	}
 
 	/**
@@ -83,7 +99,7 @@ public class StorageInfoApplication extends Application {
 	 *            True if the notification is showed.
 	 */
 	public void setShowNotification(boolean flag) {
-		SharedPreferences.Editor editor = sharedPreferences.edit();
+		SharedPreferences.Editor editor = mSharedPreferences.edit();
 		editor.putBoolean(SHOW_NOTIFICATION, flag);
 		editor.commit();
 	}
@@ -94,7 +110,7 @@ public class StorageInfoApplication extends Application {
 	 * @return True if the notification is enabled.
 	 */
 	public boolean isEnableNotifications() {
-		return sharedPreferences.getBoolean(ENABLE_NOTIFICATIONS, true);
+		return mSharedPreferences.getBoolean(ENABLE_NOTIFICATIONS, true);
 	}
 
 	/**
@@ -103,28 +119,38 @@ public class StorageInfoApplication extends Application {
 	 * @return True if the storage info is enabled.
 	 */
 	public boolean isEnableStorageInfo() {
-		return sharedPreferences.getBoolean(ENABLE_STORAGE_INFO, true);
+		return mSharedPreferences.getBoolean(ENABLE_STORAGE_INFO, true);
 	}
 
 	/**
 	 * Show the notification on the navigation bar.
 	 */
 	public void showNotification() {
-		Intent intent = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
+		Intent intent = null;
+		if (isEnabledQuickStorageAccess()) {
+			intent = new Intent(this, StorageActivity.class);
+		} else {
+			intent = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
+		}
+
 		PendingIntent pIntent = PendingIntent.getActivity(
 				this.getBaseContext(), 0, intent, 0);
 
-		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		NotificationCompat.Builder notifBuilder = new NotificationCompat.Builder(
-				this);
+		if (mNotificationManager == null) {
+			mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		}
+		if (mNotifBuilder == null) {
+			mNotifBuilder = new NotificationCompat.Builder(this);
+		}
 
-		notifBuilder.setContentTitle(this.getText(R.string.notification_title))
+		mNotifBuilder
+				.setContentTitle(this.getText(R.string.notification_title))
 				.setContentText(this.getText(R.string.notification_message))
 				.setSmallIcon(R.drawable.ic_launcher);
 
-		notifBuilder.setContentIntent(pIntent);
+		mNotifBuilder.setContentIntent(pIntent);
 
-		Notification notification = notifBuilder.build();
+		Notification notification = mNotifBuilder.build();
 		notification.flags |= Notification.FLAG_NO_CLEAR;
 		mNotificationManager.notify(NOTIFICATION_ID, notification);
 		setShowNotification(true);
@@ -134,7 +160,6 @@ public class StorageInfoApplication extends Application {
 	 * Hide the notification from the navigation bar.
 	 */
 	public void hideNotification() {
-		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		mNotificationManager.cancel(NOTIFICATION_ID);
 		setShowNotification(false);
 	}
@@ -150,11 +175,18 @@ public class StorageInfoApplication extends Application {
 		boolean result = false;
 		if (intent != null) {
 			String action = intent.getAction();
+			String dataString = String.valueOf(intent.getDataString());
+			String dataPath = intent.getData() != null ? intent.getData()
+					.getPath() : null;
 			showDebuggingMessage(context, action);
 			if ("android.intent.action.MEDIA_MOUNTED".contains(action)) {
-				if (isUsbDeviceConnected(context) && isEnableNotifications()
-						&& !isShowNotification()) {
-					showNotification();
+				if (isUsbDeviceConnected(context)) {
+					if (dataString.startsWith("file:") && dataPath != null) {
+						mStoragePath = dataPath;
+					}
+					if (isEnableNotifications() && !isShowNotification()) {
+						showNotification();
+					}
 				}
 				result = true;
 			} else if ("android.intent.action.MEDIA_UNMOUNTED".equals(action)
@@ -168,11 +200,47 @@ public class StorageInfoApplication extends Application {
 					|| "com.sonyericsson.hardware.action.USB_OTG_DEVICE_DISCONNECTED"
 							.equals(action)) {
 				if (!isUsbDeviceConnected(context) && isShowNotification()) {
+					if (mStoragePath != null && mStoragePath.equals(dataPath)) {
+						mStoragePath = null;
+					}
 					hideNotification();
 				}
 			}
+			updateStorageState();
+			updateNotificationText();
 		}
 		return result;
+	}
+
+	/**
+	 * Update storage state.
+	 */
+	private void updateStorageState() {
+		if (mStoragePath != null) {
+			String state = MountService.getVolumeState(getMountService(),
+					mStoragePath);
+			if (Environment.MEDIA_MOUNTED.equals(state)) {
+				mStorageState = STORAGE_STATE.MOUNTED;
+			} else if (Environment.MEDIA_UNMOUNTED.equals(state)) {
+				mStorageState = STORAGE_STATE.UNMOUNTED;
+			}
+		}
+	}
+
+	/**
+	 * Update the notification text.
+	 */
+	private void updateNotificationText() {
+		if (isShowNotification() && isEnabledQuickStorageAccess()) {
+			mNotifBuilder
+					.setContentText(this
+							.getText(mStorageState == STORAGE_STATE.MOUNTED ? R.string.quick_notification_unmount
+									: R.string.quick_notification_mount));
+
+			Notification notification = mNotifBuilder.build();
+			notification.flags |= Notification.FLAG_NO_CLEAR;
+			mNotificationManager.notify(NOTIFICATION_ID, notification);
+		}
 	}
 
 	/**
@@ -209,7 +277,18 @@ public class StorageInfoApplication extends Application {
 	 * @return True if debugging is enabled.
 	 */
 	public boolean isDebuggingEnabled() {
-		return sharedPreferences.getBoolean(DEBUGGING_ENABLED, false);
+		return mSharedPreferences.getBoolean(DEBUGGING_ENABLED, false);
+	}
+
+	/**
+	 * Check if is enabled quick storage access to quick mount or unmount the
+	 * USB storage.
+	 * 
+	 * @return True if the quick storage access is enabled.
+	 */
+	public boolean isEnabledQuickStorageAccess() {
+		return mSharedPreferences
+				.getBoolean(ENABLE_QUICK_STORAGE_ACCESS, false);
 	}
 
 	/**
@@ -235,5 +314,44 @@ public class StorageInfoApplication extends Application {
 	 */
 	public void showToastMessage(Context context, String message) {
 		Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+	}
+
+	/**
+	 * Obtain the Mount Service object.
+	 * 
+	 * @return The Mount Service.
+	 */
+	public Object getMountService() {
+		if (mMountService == null) {
+			mMountService = MountService.getService();
+		}
+		return mMountService;
+	}
+
+	/**
+	 * Check if the USB storage is mounted.
+	 * 
+	 * @return True, if an USB storage is mounted.
+	 */
+	public boolean isStorageMounted() {
+		return mStorageState == STORAGE_STATE.MOUNTED;
+	}
+
+	/**
+	 * Obtain the storage state.
+	 * 
+	 * @return The storage state could be: other, mounted or unmounted.
+	 */
+	public STORAGE_STATE getStorageState() {
+		return mStorageState;
+	}
+
+	/**
+	 * Retrieve USB storage path.
+	 * 
+	 * @return The USB storage path.
+	 */
+	public String getStoragePath() {
+		return mStoragePath;
 	}
 }
