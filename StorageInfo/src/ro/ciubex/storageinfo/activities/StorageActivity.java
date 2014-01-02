@@ -30,6 +30,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -59,7 +60,9 @@ public class StorageActivity extends Activity implements View.OnClickListener,
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_LEFT_ICON);
 		setContentView(R.layout.storage_layout);
+		getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, android.R.drawable.ic_dialog_alert);
 		Application application = getApplication();
 		if (application instanceof StorageInfoApplication) {
 			mApplication = (StorageInfoApplication) application;
@@ -129,6 +132,8 @@ public class StorageActivity extends Activity implements View.OnClickListener,
 			} else {
 				doMount();
 			}
+		} else {
+			finish();
 		}
 	}
 

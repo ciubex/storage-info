@@ -372,7 +372,7 @@ public class StorageInfoApplication extends Application {
 	public void showExceptionMessage(final DialogButtonListener listener,
 			String title, String message) {
 		AlertDialog.Builder alertDialog = new AlertDialog.Builder(
-				listener.getContext());
+				listener.getContext(), R.style.AlertDialogCustom);
 		alertDialog.setIcon(android.R.drawable.ic_dialog_info);
 		alertDialog.setTitle(title);
 		alertDialog.setMessage(message);
