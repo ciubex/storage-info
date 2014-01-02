@@ -25,6 +25,7 @@ import android.app.Application;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.view.Window;
 
 /**
  * This is main activity.
@@ -46,7 +47,9 @@ public class IntroActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_LEFT_ICON);
 		setContentView(R.layout.activity_intro);
+		getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, android.R.drawable.ic_dialog_info);
 		Application application = getApplication();
 		if (application instanceof StorageInfoApplication) {
 			mApplication = (StorageInfoApplication) application;
