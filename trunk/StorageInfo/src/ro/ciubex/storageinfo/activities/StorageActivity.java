@@ -21,12 +21,14 @@ package ro.ciubex.storageinfo.activities;
 import ro.ciubex.storageinfo.R;
 import ro.ciubex.storageinfo.StorageInfoApplication;
 import ro.ciubex.storageinfo.StorageInfoApplication.STORAGE_STATE;
-import ro.ciubex.storageinfo.background.Utils.MountService;
+import ro.ciubex.storageinfo.util.Utils.MountService;
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -38,7 +40,9 @@ import android.widget.TextView;
  * @author Claudiu Ciobotariu
  * 
  */
-public class StorageActivity extends Activity implements View.OnClickListener {
+public class StorageActivity extends Activity implements View.OnClickListener,
+		DialogButtonListener {
+	static final String TAG = StorageActivity.class.getName();
 	private StorageInfoApplication mApplication;
 	private TextView confirmText;
 	private Button btnOk, btnCancel;
@@ -126,7 +130,6 @@ public class StorageActivity extends Activity implements View.OnClickListener {
 				doMount();
 			}
 		}
-		finish();
 	}
 
 	/**
@@ -144,8 +147,18 @@ public class StorageActivity extends Activity implements View.OnClickListener {
 	 */
 	private void doUnmount() {
 		if (mStoragePath != null) {
-			MountService.unmountVolume(mApplication.getMountService(),
-					mStoragePath, true);
+			try {
+				MountService.unmountVolume(mApplication.getMountService(),
+						mStoragePath, true);
+				finish();
+			} catch (Exception e) {
+				Log.e(TAG, e.getMessage(), e);
+				mApplication.showExceptionMessage(
+						this,
+						mApplication.getString(R.string.error_unmount_title),
+						mApplication.getString(R.string.error_unmount_text,
+								e.getMessage()));
+			}
 		}
 	}
 
@@ -154,8 +167,39 @@ public class StorageActivity extends Activity implements View.OnClickListener {
 	 */
 	private void doMount() {
 		if (mStoragePath != null) {
-			MountService.mountVolume(mApplication.getMountService(),
-					mStoragePath);
+			try {
+				MountService.mountVolume(mApplication.getMountService(),
+						mStoragePath);
+				finish();
+			} catch (Exception e) {
+				Log.e(TAG, e.getMessage(), e);
+				mApplication.showExceptionMessage(
+						this,
+						mApplication.getString(R.string.error_mount_title),
+						mApplication.getString(R.string.error_mount_text,
+								e.getMessage()));
+			}
 		}
+	}
+
+	/**
+	 * Invoked when the user click on a dialog button.
+	 * 
+	 * @param buttonId
+	 *            The ID of the clicked button.
+	 */
+	@Override
+	public void onButtonClicked(int buttonId) {
+		finish();
+	}
+
+	/**
+	 * Obtain the activity context.
+	 * 
+	 * @return The activity context.
+	 */
+	@Override
+	public Context getContext() {
+		return this;
 	}
 }

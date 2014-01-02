@@ -20,16 +20,17 @@ package ro.ciubex.storageinfo;
 
 import java.util.HashMap;
 import java.util.Map.Entry;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import ro.ciubex.storageinfo.activities.DialogButtonListener;
 import ro.ciubex.storageinfo.activities.StorageActivity;
-import ro.ciubex.storageinfo.background.Utils.MountService;
+import ro.ciubex.storageinfo.util.Utils.MountService;
+import android.app.AlertDialog;
 import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.usb.UsbConstants;
@@ -40,6 +41,7 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 import android.widget.Toast;
 
 /**
@@ -49,8 +51,7 @@ import android.widget.Toast;
  * 
  */
 public class StorageInfoApplication extends Application {
-	private static Logger logger = Logger
-			.getLogger(StorageInfoApplication.class.getName());
+	private static final String TAG = StorageInfoApplication.class.getName();
 	private SharedPreferences mSharedPreferences;
 	private static final String SHOW_NOTIFICATION = "showNotification";
 	private static final String ENABLE_NOTIFICATIONS = "enableNotifications";
@@ -77,7 +78,7 @@ public class StorageInfoApplication extends Application {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		logger.log(Level.INFO, "StorageInfoApplication started!");
+		Log.d(TAG, "StorageInfoApplication started!");
 		mSharedPreferences = PreferenceManager
 				.getDefaultSharedPreferences(this);
 		mStorageState = STORAGE_STATE.OTHER;
@@ -160,7 +161,9 @@ public class StorageInfoApplication extends Application {
 	 * Hide the notification from the navigation bar.
 	 */
 	public void hideNotification() {
-		mNotificationManager.cancel(NOTIFICATION_ID);
+		if (mNotificationManager != null) {
+			mNotificationManager.cancel(NOTIFICATION_ID);
+		}
 		setShowNotification(false);
 	}
 
@@ -231,7 +234,8 @@ public class StorageInfoApplication extends Application {
 	 * Update the notification text.
 	 */
 	private void updateNotificationText() {
-		if (isShowNotification() && isEnabledQuickStorageAccess()) {
+		if (mNotifBuilder != null && mNotificationManager != null
+				&& isShowNotification() && isEnabledQuickStorageAccess()) {
 			mNotifBuilder
 					.setContentText(this
 							.getText(mStorageState == STORAGE_STATE.MOUNTED ? R.string.quick_notification_unmount
@@ -353,5 +357,35 @@ public class StorageInfoApplication extends Application {
 	 */
 	public String getStoragePath() {
 		return mStoragePath;
+	}
+
+	/**
+	 * Display an exception dialog message.
+	 * 
+	 * @param listener
+	 *            The dialog parent listener.
+	 * @param title
+	 *            The dialog title text.
+	 * @param message
+	 *            The message to be displayed.
+	 */
+	public void showExceptionMessage(final DialogButtonListener listener,
+			String title, String message) {
+		AlertDialog.Builder alertDialog = new AlertDialog.Builder(
+				listener.getContext());
+		alertDialog.setIcon(android.R.drawable.ic_dialog_info);
+		alertDialog.setTitle(title);
+		alertDialog.setMessage(message);
+		alertDialog.setCancelable(false);
+		alertDialog.setPositiveButton(R.string.ok,
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int buttonId) {
+						listener.onButtonClicked(buttonId);
+						dialog.dismiss();
+					}
+				});
+
+		AlertDialog alert = alertDialog.create();
+		alert.show();
 	}
 }
