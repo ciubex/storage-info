@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ro.ciubex.storageinfo.background;
+package ro.ciubex.storageinfo.util;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -84,6 +84,9 @@ public class Utils {
 		} catch (InvocationTargetException e) {
 			Log.e(TAG, e.getMessage(), e);
 			throw new AndroidRuntimeException(e);
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage(), e);
+			throw new AndroidRuntimeException(e);
 		}
 	}
 
@@ -94,8 +97,6 @@ public class Utils {
 					SERVICE_MOUNT);
 			if (service != null) {
 				return invoke(METHOD_IMountService_asInterface, null, service);
-			} else {
-				Log.e(TAG, "Can't get mount service");
 			}
 			return null;
 		}

@@ -39,8 +39,10 @@
     <string name="confirm_unmount_title">Unmount USB storage</string>
     <string name="confirm_unmount_text">If you unmount the USB storage, some applications that you are using will stop and may be unavailable until you remount the USB storage.</string>
     <string name="error_unmount_title">Unmounting USB storage failed</string>
-    <string name="error_unmount_text">Cannot unmount USB storage. Try again later.</string>
-
+    <string name="error_unmount_text">Cannot unmount USB storage. Try again later.\nIf the error persist please uncheck the quick storage access.\nThe error:\n%s.</string>
+	<string name="error_mount_title">Mounting USB storage failed</string>
+    <string name="error_mount_text">Cannot mount USB storage. Try again later.\nIf the error persist please uncheck the quick storage access.\nThe error:\n%s.</string>
+    
     <!-- License -->
     <string name="license">License</string>
     <string name="show_license">Show License</string>
