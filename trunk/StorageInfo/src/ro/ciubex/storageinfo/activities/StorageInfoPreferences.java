@@ -186,7 +186,7 @@ public class StorageInfoPreferences extends PreferenceActivity {
 	 */
 	private void showConfirmationDialog(int titleStringId, String message,
 			final int confirmationId, final Object anObject) {
-		new AlertDialog.Builder(this, R.style.AlertDialogCustom)
+		new AlertDialog.Builder(this)
 				.setIcon(android.R.drawable.ic_dialog_alert)
 				.setTitle(titleStringId)
 				.setMessage(message)

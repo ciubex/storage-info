@@ -33,6 +33,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbInterface;
@@ -53,6 +54,8 @@ import android.widget.Toast;
 public class StorageInfoApplication extends Application {
 	private static final String TAG = StorageInfoApplication.class.getName();
 	private SharedPreferences mSharedPreferences;
+	private static int mVersionCode = -1;
+	private static final String FIRST_TIME = "firstTime";
 	private static final String SHOW_NOTIFICATION = "showNotification";
 	private static final String ENABLE_NOTIFICATIONS = "enableNotifications";
 	private static final String ENABLE_STORAGE_INFO = "enableStorageInfo";
@@ -85,6 +88,36 @@ public class StorageInfoApplication extends Application {
 	}
 
 	/**
+	 * Check if the application is launched for the first time.
+	 * 
+	 * @return True if is the first time when the application is launched.
+	 */
+	public boolean isFirstTime() {
+		String key = FIRST_TIME + getVersion();
+		boolean result = mSharedPreferences.getBoolean(key, true);
+		if (result) {
+			saveBooleanSharedPreference(key, false);
+		}
+		return result;
+	}
+
+	/**
+	 * Retrieve the application version code.
+	 * 
+	 * @return The application version code.
+	 */
+	public int getVersion() {
+		if (mVersionCode == -1) {
+			try {
+				mVersionCode = getPackageManager().getPackageInfo(
+						getPackageName(), 0).versionCode;
+			} catch (NameNotFoundException e) {
+			}
+		}
+		return mVersionCode;
+	}
+
+	/**
 	 * Check if the notification is showed.
 	 * 
 	 * @return True if the notification is showed.
@@ -100,8 +133,20 @@ public class StorageInfoApplication extends Application {
 	 *            True if the notification is showed.
 	 */
 	public void setShowNotification(boolean flag) {
+		saveBooleanSharedPreference(SHOW_NOTIFICATION, flag);
+	}
+
+	/**
+	 * Internal method to store a boolean shared preference.
+	 * 
+	 * @param key
+	 *            The key of boolean shared preference.
+	 * @param value
+	 *            The boolean value to be stored.
+	 */
+	private void saveBooleanSharedPreference(String key, boolean value) {
 		SharedPreferences.Editor editor = mSharedPreferences.edit();
-		editor.putBoolean(SHOW_NOTIFICATION, flag);
+		editor.putBoolean(key, value);
 		editor.commit();
 	}
 
@@ -184,7 +229,7 @@ public class StorageInfoApplication extends Application {
 			showDebuggingMessage(context, action);
 			if ("android.intent.action.MEDIA_MOUNTED".contains(action)) {
 				if (isUsbDeviceConnected(context)) {
-					if (dataString.startsWith("file:") && dataPath != null) {
+					if (dataString.startsWith("file:")) {
 						mStoragePath = dataPath;
 					}
 					if (isEnableNotifications() && !isShowNotification()) {
@@ -236,10 +281,13 @@ public class StorageInfoApplication extends Application {
 	private void updateNotificationText() {
 		if (mNotifBuilder != null && mNotificationManager != null
 				&& isShowNotification() && isEnabledQuickStorageAccess()) {
-			mNotifBuilder
-					.setContentText(this
-							.getText(mStorageState == STORAGE_STATE.MOUNTED ? R.string.quick_notification_unmount
-									: R.string.quick_notification_mount));
+			String title = mStoragePath != null ? getString(
+					R.string.notification_title_path, mStoragePath)
+					: getString(R.string.notification_title);
+			String text = getString(mStorageState == STORAGE_STATE.MOUNTED ? R.string.quick_notification_unmount
+					: R.string.quick_notification_mount);
+			mNotifBuilder.setContentTitle(title);
+			mNotifBuilder.setContentText(text);
 
 			Notification notification = mNotifBuilder.build();
 			notification.flags |= Notification.FLAG_NO_CLEAR;
@@ -372,7 +420,7 @@ public class StorageInfoApplication extends Application {
 	public void showExceptionMessage(final DialogButtonListener listener,
 			String title, String message) {
 		AlertDialog.Builder alertDialog = new AlertDialog.Builder(
-				listener.getContext(), R.style.AlertDialogCustom);
+				listener.getContext());
 		alertDialog.setIcon(android.R.drawable.ic_dialog_info);
 		alertDialog.setTitle(title);
 		alertDialog.setMessage(message);

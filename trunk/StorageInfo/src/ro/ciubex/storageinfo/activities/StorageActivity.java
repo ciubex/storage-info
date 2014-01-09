@@ -23,16 +23,16 @@ import ro.ciubex.storageinfo.StorageInfoApplication;
 import ro.ciubex.storageinfo.StorageInfoApplication.STORAGE_STATE;
 import ro.ciubex.storageinfo.util.Utils.MountService;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Application;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.View;
 import android.view.Window;
-import android.widget.Button;
-import android.widget.TextView;
 
 /**
  * This is actually the dialog showed to the user to quickly mount or unmount
@@ -41,13 +41,12 @@ import android.widget.TextView;
  * @author Claudiu Ciobotariu
  * 
  */
-public class StorageActivity extends Activity implements View.OnClickListener,
-		DialogButtonListener {
+public class StorageActivity extends Activity implements DialogButtonListener {
 	static final String TAG = StorageActivity.class.getName();
 	private StorageInfoApplication mApplication;
-	private TextView confirmText;
-	private Button btnOk, btnCancel;
 	private String mStoragePath;
+	private static final int ALERT_UNMOUNT = 0;
+	private static final int ALERT_MOUNT = 1;
 
 	/**
 	 * Called when the activity is starting.
@@ -62,24 +61,12 @@ public class StorageActivity extends Activity implements View.OnClickListener,
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_LEFT_ICON);
 		setContentView(R.layout.storage_layout);
-		getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, android.R.drawable.ic_dialog_alert);
+		getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON,
+				android.R.drawable.ic_dialog_alert);
 		Application application = getApplication();
 		if (application instanceof StorageInfoApplication) {
 			mApplication = (StorageInfoApplication) application;
 		}
-
-		confirmText = (TextView) findViewById(R.id.confirmText);
-		initButtons();
-	}
-
-	/**
-	 * Initialize default buttons.
-	 */
-	private void initButtons() {
-		btnOk = (Button) findViewById(R.id.btn_ok);
-		btnOk.setOnClickListener(this);
-		btnCancel = (Button) findViewById(R.id.btn_cancel);
-		btnCancel.setOnClickListener(this);
 	}
 
 	/**
@@ -107,34 +94,67 @@ public class StorageActivity extends Activity implements View.OnClickListener,
 	 * Prepare texts for this activity.
 	 */
 	private void prepareActivityText() {
-		if (mApplication.getStorageState() == STORAGE_STATE.MOUNTED) {
-			setTitle(R.string.confirm_unmount_title);
-			confirmText.setText(mApplication
-					.getString(R.string.confirm_unmount_text));
+		if (mStoragePath != null
+				&& mApplication.getStorageState() == STORAGE_STATE.MOUNTED) {
+			showDialog(ALERT_UNMOUNT);
 		} else {
-			setTitle(R.string.confirm_mount_title);
-			confirmText.setText(mApplication
-					.getString(R.string.confirm_mount_text));
+			showDialog(ALERT_MOUNT);
 		}
 	}
 
-	/**
-	 * Called when a view has been clicked.
+	/*
+	 * (non-Javadoc)
 	 * 
-	 * @param view
-	 *            The view that was clicked.
+	 * @see android.app.Activity#onCreateDialog(int, android.os.Bundle)
 	 */
 	@Override
-	public void onClick(View view) {
-		if (view == btnOk) {
-			if (mApplication.getStorageState() == STORAGE_STATE.MOUNTED) {
-				doUnmount();
-			} else {
-				doMount();
-			}
-		} else {
-			finish();
+	protected Dialog onCreateDialog(int id) {
+		Dialog dialog = null;
+		AlertDialog.Builder builder = null;
+		switch (id) {
+		case ALERT_UNMOUNT:
+			builder = new AlertDialog.Builder(this);
+			builder.setTitle(R.string.confirm_unmount_title).setMessage(
+					mApplication.getString(R.string.confirm_unmount_text,
+							mStoragePath));
+			break;
+		case ALERT_MOUNT:
+			builder = new AlertDialog.Builder(this);
+			builder.setTitle(R.string.confirm_mount_title).setMessage(
+					R.string.confirm_mount_text);
+			break;
 		}
+		if (builder != null) {
+			builder.setCancelable(false)
+					.setPositiveButton(R.string.ok,
+							new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog,
+										int id) {
+									onClickOk();
+								}
+							})
+					.setNegativeButton(R.string.cancel,
+							new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog,
+										int id) {
+									onClickCancel();
+								}
+							});
+			dialog = builder.create();
+		}
+		return dialog;
+	}
+
+	private void onClickOk() {
+		if (mApplication.getStorageState() == STORAGE_STATE.MOUNTED) {
+			doUnmount();
+		} else {
+			doMount();
+		}
+	}
+
+	private void onClickCancel() {
+		finish();
 	}
 
 	/**
@@ -158,11 +178,11 @@ public class StorageActivity extends Activity implements View.OnClickListener,
 				finish();
 			} catch (Exception e) {
 				Log.e(TAG, e.getMessage(), e);
-				mApplication.showExceptionMessage(
-						this,
-						mApplication.getString(R.string.error_unmount_title),
-						mApplication.getString(R.string.error_unmount_text,
-								e.getMessage()));
+				mApplication.showExceptionMessage(this, mApplication
+						.getString(R.string.error_unmount_title), mApplication
+						.getString(R.string.error_unmount_text, mStoragePath, e
+								.getMessage(), (e.getCause() != null) ? e
+								.getCause().getCause() : "null"));
 			}
 		}
 	}
@@ -178,11 +198,11 @@ public class StorageActivity extends Activity implements View.OnClickListener,
 				finish();
 			} catch (Exception e) {
 				Log.e(TAG, e.getMessage(), e);
-				mApplication.showExceptionMessage(
-						this,
-						mApplication.getString(R.string.error_mount_title),
-						mApplication.getString(R.string.error_mount_text,
-								e.getMessage()));
+				mApplication.showExceptionMessage(this, mApplication
+						.getString(R.string.error_mount_title), mApplication
+						.getString(R.string.error_mount_text, e.getMessage(),
+								(e.getCause() != null) ? e.getCause()
+										.getCause() : "null"));
 			}
 		}
 	}
