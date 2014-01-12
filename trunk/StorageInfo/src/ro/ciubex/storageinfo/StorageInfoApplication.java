@@ -225,20 +225,30 @@ public class StorageInfoApplication extends Application {
 			String action = intent.getAction();
 			String dataString = String.valueOf(intent.getDataString());
 			String dataPath = intent.getData() != null ? intent.getData()
-					.getPath() : null;
+					.getPath() : "";
 			showDebuggingMessage(context, action);
 			if ("android.intent.action.MEDIA_MOUNTED".contains(action)) {
-				if (isUsbDeviceConnected(context)) {
-					if (dataString.startsWith("file:")) {
-						mStoragePath = dataPath;
-					}
+				if (isUsbDeviceConnected(context)
+						&& dataString.startsWith("file:")
+						&& mStoragePath == null) {
+					mStoragePath = dataPath;
+					updateStorageState();
 					if (isEnableNotifications() && !isShowNotification()) {
-						showNotification();
+						if (mStorageState == STORAGE_STATE.MOUNTED) {
+							showNotification();
+						}
 					}
+					updateNotificationText();
+					result = true;
 				}
-				result = true;
-			} else if ("android.intent.action.MEDIA_UNMOUNTED".equals(action)
-					|| "android.intent.action.MEDIA_BAD_REMOVAL".equals(action)
+
+			} else if ("android.intent.action.MEDIA_UNMOUNTED".equals(action)) {
+				if (dataPath.equals(mStoragePath)) {
+					updateStorageState();
+					updateNotificationText();
+					result = true;
+				}
+			} else if ("android.intent.action.MEDIA_BAD_REMOVAL".equals(action)
 					|| "android.intent.action.MEDIA_EJECT".equals(action)
 					|| "android.intent.action.MEDIA_REMOVED".equals(action)
 					|| "android.hardware.usb.action.USB_DEVICE_DETACHED"
@@ -247,15 +257,16 @@ public class StorageInfoApplication extends Application {
 							.equals(action)
 					|| "com.sonyericsson.hardware.action.USB_OTG_DEVICE_DISCONNECTED"
 							.equals(action)) {
-				if (!isUsbDeviceConnected(context) && isShowNotification()) {
-					if (mStoragePath != null && mStoragePath.equals(dataPath)) {
+				if (isShowNotification() && dataPath.equals(mStoragePath)) {
+					updateStorageState();
+					if (mStorageState == STORAGE_STATE.OTHER) {
 						mStoragePath = null;
+						hideNotification();
 					}
-					hideNotification();
+					result = true;
 				}
 			}
-			updateStorageState();
-			updateNotificationText();
+
 		}
 		return result;
 	}
@@ -263,7 +274,8 @@ public class StorageInfoApplication extends Application {
 	/**
 	 * Update storage state.
 	 */
-	private void updateStorageState() {
+	public void updateStorageState() {
+		mStorageState = STORAGE_STATE.OTHER;
 		if (mStoragePath != null) {
 			String state = MountService.getVolumeState(getMountService(),
 					mStoragePath);
@@ -278,16 +290,19 @@ public class StorageInfoApplication extends Application {
 	/**
 	 * Update the notification text.
 	 */
-	private void updateNotificationText() {
-		if (mNotifBuilder != null && mNotificationManager != null
-				&& isShowNotification() && isEnabledQuickStorageAccess()) {
+	public void updateNotificationText() {
+		if (isShowNotification() && isEnabledQuickStorageAccess()
+				&& mNotifBuilder != null && mNotificationManager != null) {
 			String title = mStoragePath != null ? getString(
 					R.string.notification_title_path, mStoragePath)
 					: getString(R.string.notification_title);
-			String text = getString(mStorageState == STORAGE_STATE.MOUNTED ? R.string.quick_notification_unmount
-					: R.string.quick_notification_mount);
+			int textId = R.string.notification_message;
+			if (mStoragePath != null) {
+				textId = (mStorageState == STORAGE_STATE.MOUNTED ? R.string.quick_notification_unmount
+						: R.string.quick_notification_mount);
+			}
 			mNotifBuilder.setContentTitle(title);
-			mNotifBuilder.setContentText(text);
+			mNotifBuilder.setContentText(getString(textId));
 
 			Notification notification = mNotifBuilder.build();
 			notification.flags |= Notification.FLAG_NO_CLEAR;
