@@ -65,7 +65,7 @@ public class IntroActivity extends Activity {
 		super.onResume();
 		if (mApplication.isFirstTime()) {
 			showSettings();
-		} else if (mApplication.isUsbDeviceConnected(this)
+		} else if (mApplication.isStorageMounted()
 				&& mApplication.isEnableStorageInfo()) {
 			showStorageSettings();
 		} else {

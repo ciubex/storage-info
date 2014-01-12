@@ -120,6 +120,10 @@ public class StorageInfoPreferences extends PreferenceActivity {
 			application.hideNotification();
 		} else {
 			application.showNotification();
+			if (application.isEnabledQuickStorageAccess()) {
+				application.updateStorageState();
+				application.updateNotificationText();
+			}
 		}
 		return true;
 	}

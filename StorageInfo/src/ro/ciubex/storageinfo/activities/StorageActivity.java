@@ -96,8 +96,10 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 	private void prepareActivityText() {
 		if (mStoragePath != null
 				&& mApplication.getStorageState() == STORAGE_STATE.MOUNTED) {
+			setTitle(R.string.confirm_unmount_title);
 			showDialog(ALERT_UNMOUNT);
 		} else {
+			setTitle(R.string.confirm_mount_title);
 			showDialog(ALERT_MOUNT);
 		}
 	}
