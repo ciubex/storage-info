@@ -21,6 +21,7 @@ package ro.ciubex.storageinfo.activities;
 import ro.ciubex.storageinfo.R;
 import ro.ciubex.storageinfo.StorageInfoApplication;
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -170,9 +171,11 @@ public class StorageInfoPreferences extends PreferenceActivity {
 	 */
 	private void startBrowserWithPage(int urlResourceId) {
 		String url = application.getString(urlResourceId);
-		Intent i = new Intent(Intent.ACTION_VIEW);
-		i.setData(Uri.parse(url));
-		startActivity(i);
+		Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+		try {
+			startActivity(i);
+		} catch (ActivityNotFoundException exception) {
+		}
 	}
 
 	/**
