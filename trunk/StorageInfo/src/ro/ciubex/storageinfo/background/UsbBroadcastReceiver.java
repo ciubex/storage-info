@@ -45,8 +45,16 @@ public class UsbBroadcastReceiver extends BroadcastReceiver {
 		Context appContext = context.getApplicationContext();
 		if (appContext instanceof StorageInfoApplication) {
 			StorageInfoApplication parentApplication = (StorageInfoApplication) appContext;
-			if (parentApplication != null) {
-				parentApplication.checkUsbEvent(context, intent);
+			if (parentApplication != null
+					&& parentApplication.isEnableNotifications()) {
+				if (parentApplication.checkUsbEvent(context, intent)) {
+					if (parentApplication.isEnabledQuickStorageAccess()) {
+						parentApplication.updateMountVolumes();
+						parentApplication.updateNotifications();
+					} else if (parentApplication.isShowNotification()) {
+						parentApplication.showDefaultNotification();
+					}
+				}
 			}
 		}
 	}
