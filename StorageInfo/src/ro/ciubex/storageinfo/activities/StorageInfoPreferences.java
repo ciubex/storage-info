@@ -18,10 +18,17 @@
  */
 package ro.ciubex.storageinfo.activities;
 
+import java.util.List;
+
 import ro.ciubex.storageinfo.R;
 import ro.ciubex.storageinfo.StorageInfoApplication;
+import ro.ciubex.storageinfo.list.ApplicationsListAdapter;
+import ro.ciubex.storageinfo.model.AppInfo;
+import ro.ciubex.storageinfo.task.ScanForApplications;
+import ro.ciubex.storageinfo.util.Utils;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -36,8 +43,10 @@ import android.provider.Settings;
  * @author Claudiu Ciobotariu
  * 
  */
-public class StorageInfoPreferences extends PreferenceActivity {
-	private StorageInfoApplication application;
+public class StorageInfoPreferences extends PreferenceActivity implements
+		ScanForApplications.Listener, DialogButtonListener {
+	private StorageInfoApplication mApplication;
+	private Preference mSetFileManager;
 	private final int CONFIRM_ID_DONATE = 1;
 
 	/**
@@ -46,7 +55,7 @@ public class StorageInfoPreferences extends PreferenceActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		application = (StorageInfoApplication) getApplication();
+		mApplication = (StorageInfoApplication) getApplication();
 		addPreferencesFromResource(R.xml.application_preferences);
 		prepareCommands();
 	}
@@ -63,7 +72,15 @@ public class StorageInfoPreferences extends PreferenceActivity {
 						return onShowStorageInfo();
 					}
 				});
+		mSetFileManager = (Preference) findPreference("setFileManager");
+		mSetFileManager
+				.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
+					@Override
+					public boolean onPreferenceClick(Preference preference) {
+						return onSetFileManager();
+					}
+				});
 		((Preference) findPreference("toggleNotification"))
 				.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
@@ -98,6 +115,46 @@ public class StorageInfoPreferences extends PreferenceActivity {
 				});
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.app.Activity#onResume()
+	 */
+	@Override
+	protected void onResume() {
+		super.onResume();
+		prepareTexts();
+	}
+
+	/**
+	 * Prepare all necessary texts.
+	 */
+	private void prepareTexts() {
+		String fileManager = mApplication.getFileManager();
+		String text = getString(R.string.file_manager);
+		if (!"null".equals(fileManager)) {
+			AppInfo appInfo = Utils.getFileManager(getPackageManager(),
+					fileManager);
+			text = getString(R.string.file_manager_selected, appInfo.getName());
+		}
+		mSetFileManager.setTitle(text);
+	}
+
+	/**
+	 * Show a list with applications to chose a file manager.
+	 * 
+	 * @return Always true.
+	 */
+	protected boolean onSetFileManager() {
+		List<AppInfo> list = mApplication.getApplicationsList();
+		if (list == null || list.isEmpty()) {
+			new ScanForApplications(this).execute();
+		} else {
+			checkApplicationList();
+		}
+		return true;
+	}
+
 	/**
 	 * Show the Storage Info activity.
 	 * 
@@ -117,13 +174,16 @@ public class StorageInfoPreferences extends PreferenceActivity {
 	 * @return Always true.
 	 */
 	private boolean onToggleNotification() {
-		if (application.isShowNotification()) {
-			application.hideNotification();
-		} else {
-			application.showNotification();
-			if (application.isEnabledQuickStorageAccess()) {
-				application.updateStorageState();
-				application.updateNotificationText();
+		if (mApplication.isEnableNotifications()) {
+			if (mApplication.isShowNotification()) {
+				mApplication.hideAllNotifications();
+			} else {
+				if (mApplication.isEnabledQuickStorageAccess()) {
+					mApplication.updateMountVolumes();
+					mApplication.updateNotifications();
+				} else {
+					mApplication.showDefaultNotification();
+				}
 			}
 		}
 		return true;
@@ -158,7 +218,7 @@ public class StorageInfoPreferences extends PreferenceActivity {
 	 */
 	private boolean onMakeDonation() {
 		showConfirmationDialog(R.string.donate_title,
-				application.getString(R.string.donate_message),
+				mApplication.getString(R.string.donate_message),
 				CONFIRM_ID_DONATE, null);
 		return true;
 	}
@@ -170,7 +230,7 @@ public class StorageInfoPreferences extends PreferenceActivity {
 	 *            The URL resource id.
 	 */
 	private void startBrowserWithPage(int urlResourceId) {
-		String url = application.getString(urlResourceId);
+		String url = mApplication.getString(urlResourceId);
 		Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
 		try {
 			startActivity(i);
@@ -233,5 +293,95 @@ public class StorageInfoPreferences extends PreferenceActivity {
 		if (positive && CONFIRM_ID_DONATE == confirmationId) {
 			startBrowserWithPage(R.string.donate_url);
 		}
+	}
+
+	@Override
+	public void onStartScan() {
+		mApplication.showProgressDialog(this, R.string.scan_for_applications);
+	}
+
+	@Override
+	public void onEndScan() {
+		mApplication.hideProgressDialog();
+		checkApplicationList();
+	}
+
+	/**
+	 * Check if the list of applications is available.
+	 */
+	private void checkApplicationList() {
+		List<AppInfo> list = mApplication.getApplicationsList();
+		if (list == null || list.isEmpty()) {
+			mApplication.showExceptionMessage(this,
+					getString(R.string.app_name),
+					getString(R.string.no_application));
+		} else {
+			showApplicationList(list);
+		}
+	}
+
+	/**
+	 * Build and show a dialog with a list of available applications.
+	 * 
+	 * @param list
+	 *            List of available applications.
+	 */
+	private void showApplicationList(List<AppInfo> list) {
+		final ApplicationsListAdapter adapter = new ApplicationsListAdapter(
+				this, list);
+		adapter.setSelectedAppInfo(mApplication.getFileManager());
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(R.string.file_manager);
+		builder.setNegativeButton(R.string.cancel,
+				new DialogInterface.OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+
+					}
+
+				});
+		builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				setAppInfo(adapter.getItem(which));
+			}
+
+		});
+		AlertDialog dialog = builder.create();
+		dialog.show();
+	}
+
+	/**
+	 * An application was chose from the list.
+	 * 
+	 * @param appInfo
+	 *            Chose application.
+	 */
+	private void setAppInfo(AppInfo appInfo) {
+		if (appInfo != null) {
+			mApplication.setFileManager(appInfo.getPackageName());
+		} else {
+			mApplication.showExceptionMessage(this,
+					getString(R.string.app_name),
+					getString(R.string.no_application));
+		}
+		prepareTexts();
+	}
+
+	@Override
+	public Context getContext() {
+		return this;
+	}
+
+	@Override
+	public void onButtonClicked(int buttonId) {
+
+	}
+
+	@Override
+	public StorageInfoApplication getStorageInfoApplication() {
+		return mApplication;
 	}
 }

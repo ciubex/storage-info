@@ -10,7 +10,7 @@
 
     <!-- Notifications -->
     <string name="notification_title">Storage Info</string>
-    <string name="notification_title_path">Storage path: %s</string>
+    <string name="notification_title_path">%s</string>
     <string name="notification_message">Touch to see storage settings</string>
 
     <!-- Settings -->
@@ -26,24 +26,32 @@
     <string name="enable_quick_storage_access_info">Enable quick storage access.</string>
     <string name="enable_quick_storage_access_info_desc">By checking this on the notification will be created a quick access to mounting or unmounting USB storage. Uncheck this if you have issues with quick mount or unmount.</string>
     <string name="other">Other</string>
+    <string name="file_manager">Select a file manager</string>
+    <string name="file_manager_desc">Select a file manager to be launched when a storage is mounted.</string>
+    <string name="file_manager_selected">Selected file manager: %s</string>
     <string name="toggle_notification">Toggle notification</string>
-    <string name="toggle_notification_desc">Use this to show or hide the notification shortcut to the Storage settings.</string>
+    <string name="toggle_notification_desc">Use this to show or hide the notification shortcuts.</string>
     <string name="enable_debugging">Enable debugging.</string>
     <string name="enable_debugging_desc">By checking this you will enable debugging support. You will see some toast messages on the screen with device events. In format: Storage Info: android.intent&#8230;</string>
     <string name="debug_message">Storage Info: %s</string>
+    <string name="icon_nothing">[]</string>
+    <string name="please_wait">Please wait&#8230;</string>
+    <string name="scan_for_applications">Scan for applications&#8230;</string>
+    <string name="no_application">No application available!</string>
 
     <!-- Storage activity dialog -->
-    <string name="quick_notification_mount">Touch to mount the USB storage.</string>
-    <string name="quick_notification_unmount">Touch to unmount the USB storage.</string>
-    <string name="confirm_mount_title">Mount USB storage</string>
-    <string name="confirm_mount_text">Mount the USB storage.</string>
-    <string name="confirm_unmount_title">Unmount USB storage.</string>
-    <string name="confirm_unmount_text">Path: %s\nIf you unmount the USB storage, some applications that you are using will stop and may be unavailable until you remount the USB storage.</string>
-    <string name="error_unmount_title">Unmounting USB storage failed</string>
+    <string name="quick_notification_mount">Touch to mount the storage.</string>
+    <string name="quick_notification_unmount">Touch to unmount the storage.</string>
+    <string name="confirm_mount_title">Mount storage</string>
+    <string name="confirm_mount_text">Mount the storage on the path: \"%s\".</string>
+    <string name="confirm_unmount_title">Unmount storage.</string>
+    <string name="confirm_unmount_text">Path: \"%s\"\nIf you unmount the USB storage, some applications that you are using will stop and may be unavailable until you remount the storage.</string>
+    <string name="error_unmount_title">Unmounting storage failed</string>
     <string name="error_unmount_text_no_error">Cannot unmount USB storage with the path: \"%s\".\nTry again later.\nIf the error persist please uncheck the quick storage access.</string>
-    <string name="error_unmount_text">Cannot unmount USB storage with the path: \"%1$s\".\nTry again later.\nIf the error persist please uncheck the quick storage access.\nThe error:\n%2$s.\nThe cause:\n%3$s.</string>
-	<string name="error_mount_title">Mounting USB storage failed</string>
-    <string name="error_mount_text">Cannot mount USB storage. Try again later.\nIf the error persist please uncheck the quick storage access.\nThe error:\n%1$s.\nThe cause:\n%2$s.</string>
+    <string name="error_unmount_text">Cannot unmount storage with the path: \"%1$s\".\nTry again later.\nIf the error persist please uncheck the quick storage access.\nThe error:\n%2$s.\nThe cause:\n%3$s.</string>
+	<string name="error_mount_title">Mounting storage failed</string>
+	<string name="error_mount_detach_text">Cannot mount storage with the path: \"%s\".\nTry to detach and attach again your device.</string>
+    <string name="error_mount_text">Cannot mount storage. Try again later.\nIf the error persist please uncheck the quick storage access.\nThe error:\n%1$s.\nThe cause:\n%2$s.</string>
     
     <!-- License -->
     <string name="license">License</string>
@@ -70,7 +78,9 @@
 		Starting with the version 2.0 is possible to access a quick mounting and unmounting dialog from the Notification bar.<br/>
 		If this new feature is crashing, please unplug any USB device attached and uncheck the "Enable quick storage access.".<br/><br/>
 		<font color=#cc0029>This application will not</font> add to your device host support, read device manual to see if the device support USB-OTG. In some cases the USB-OTG could be enabled by using a custom ROM.<br/><br/>
-		<font color=#cc0029>This application will not</font> mount or unmount an USB storage device, that\'s Storage Settings for.]]>
+		<font color=#cc0029>This application will not always</font> mount back an unmounted USB storage device, that\'s because sometime the Android system is not able to process that request. I made the implementation but is not always successfully.<br/><br/>
+		Starting with the version 3.0 is possible to select an application, preferable a file manager, to be launched when a storage is mounted.<br/> 
+		If you select a file manager to be launched when a storage is mounted is no guarentee to be displayed the mounted folder, that because is not a standard way to \"notice\" the application to show a particular path. I test with <a href="https://play.google.com/store/apps/details?id=com.estrongs.android.pop">ES File Explorer</a>.]]>
 </Data></string>
 
 </resources>

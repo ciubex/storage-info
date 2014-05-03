@@ -17,17 +17,25 @@
             android:title="@string/enable_notifications" />
         <CheckBoxPreference
             android:defaultValue="true"
+            android:dependency="enableNotifications"
             android:key="enableStorageInfo"
             android:summary="@string/enable_storage_info_desc"
             android:title="@string/enable_storage_info" />
         <CheckBoxPreference
             android:defaultValue="false"
+            android:dependency="enableNotifications"
             android:key="enableQuickStorageAccess"
             android:summary="@string/enable_quick_storage_access_info_desc"
             android:title="@string/enable_quick_storage_access_info" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/other" >
+        <Preference android:dependency="enableNotifications"
+            android:key="setFileManager"
+            android:persistent="false"
+            android:summary="@string/file_manager_desc"
+            android:title="@string/file_manager"/>
         <Preference
+            android:dependency="enableNotifications"
             android:key="toggleNotification"
             android:persistent="false"
             android:summary="@string/toggle_notification_desc"

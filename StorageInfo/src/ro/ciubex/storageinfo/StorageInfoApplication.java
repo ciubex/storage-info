@@ -18,26 +18,35 @@
  */
 package ro.ciubex.storageinfo;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 
 import ro.ciubex.storageinfo.activities.DialogButtonListener;
 import ro.ciubex.storageinfo.activities.StorageActivity;
+import ro.ciubex.storageinfo.model.AppInfo;
+import ro.ciubex.storageinfo.model.MountVolume;
 import ro.ciubex.storageinfo.util.Utils.MountService;
 import android.app.AlertDialog;
 import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
+import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -61,17 +70,14 @@ public class StorageInfoApplication extends Application {
 	private static final String ENABLE_STORAGE_INFO = "enableStorageInfo";
 	private static final String ENABLE_QUICK_STORAGE_ACCESS = "enableQuickStorageAccess";
 	private static final String DEBUGGING_ENABLED = "debuggingEnabled";
-	private static final int NOTIFICATION_ID = 0;
+	private static final String FILE_MANAGER = "fileManager";
 	private NotificationManager mNotificationManager;
-	private NotificationCompat.Builder mNotifBuilder;
 	private Object mMountService;
-	private String mStoragePath;
-
-	public enum STORAGE_STATE {
-		OTHER, MOUNTED, UNMOUNTED
-	};
-
-	private STORAGE_STATE mStorageState;
+	private List<MountVolume> mMountVolumes;
+	private List<Integer> mNotifications;
+	private static final int DEFAULT_NOTIFICATION_ID = 0;
+	private List<AppInfo> mApplicationsList;
+	private ProgressDialog mProgressDialog;
 
 	/**
 	 * This method is invoked when the application is created.
@@ -84,7 +90,15 @@ public class StorageInfoApplication extends Application {
 		Log.d(TAG, "StorageInfoApplication started!");
 		mSharedPreferences = PreferenceManager
 				.getDefaultSharedPreferences(this);
-		mStorageState = STORAGE_STATE.OTHER;
+		mNotifications = new ArrayList<Integer>();
+		updateMountVolumes();
+	}
+
+	/**
+	 * Update storage volumes.
+	 */
+	public void updateMountVolumes() {
+		mMountVolumes = MountService.getVolumeList(getMountService());
 	}
 
 	/**
@@ -168,46 +182,61 @@ public class StorageInfoApplication extends Application {
 		return mSharedPreferences.getBoolean(ENABLE_STORAGE_INFO, true);
 	}
 
-	/**
-	 * Show the notification on the navigation bar.
-	 */
-	public void showNotification() {
-		Intent intent = null;
-		if (isEnabledQuickStorageAccess()) {
-			intent = new Intent(this, StorageActivity.class);
-		} else {
-			intent = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
-		}
-
-		PendingIntent pIntent = PendingIntent.getActivity(
-				this.getBaseContext(), 0, intent, 0);
-
+	private NotificationManager getNotificationManager() {
 		if (mNotificationManager == null) {
 			mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		}
-		if (mNotifBuilder == null) {
-			mNotifBuilder = new NotificationCompat.Builder(this);
+		return mNotificationManager;
+	}
+
+	/**
+	 * Show the notification on the navigation bar.
+	 */
+	public void showDefaultNotification() {
+		NotificationManager notificationManager = getNotificationManager();
+		if (notificationManager != null) {
+			Intent intent = new Intent(
+					Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
+			NotificationCompat.Builder notifBuilder = new NotificationCompat.Builder(
+					this);
+
+			PendingIntent pIntent = PendingIntent.getActivity(
+					this.getBaseContext(), 0, intent, 0);
+
+			notifBuilder
+					.setContentTitle(this.getText(R.string.notification_title))
+					.setContentText(this.getText(R.string.notification_message))
+					.setSmallIcon(R.drawable.ic_launcher);
+
+			notifBuilder.setContentIntent(pIntent);
+
+			Notification notification = notifBuilder.build();
+			notification.flags |= Notification.FLAG_NO_CLEAR;
+			notificationManager.notify(DEFAULT_NOTIFICATION_ID, notification);
+			mNotifications.add(DEFAULT_NOTIFICATION_ID);
 		}
-
-		mNotifBuilder
-				.setContentTitle(this.getText(R.string.notification_title))
-				.setContentText(this.getText(R.string.notification_message))
-				.setSmallIcon(R.drawable.ic_launcher);
-
-		mNotifBuilder.setContentIntent(pIntent);
-
-		Notification notification = mNotifBuilder.build();
-		notification.flags |= Notification.FLAG_NO_CLEAR;
-		mNotificationManager.notify(NOTIFICATION_ID, notification);
-		setShowNotification(true);
+		setShowNotification(!mNotifications.isEmpty());
 	}
 
 	/**
 	 * Hide the notification from the navigation bar.
 	 */
-	public void hideNotification() {
-		if (mNotificationManager != null) {
-			mNotificationManager.cancel(NOTIFICATION_ID);
+	private void hideNotification(NotificationManager notificationManager,
+			int id) {
+		if (notificationManager != null) {
+			notificationManager.cancel(id);
+		}
+	}
+
+	/**
+	 * Hide all notifications.
+	 */
+	public void hideAllNotifications() {
+		if (mNotificationManager != null && !mNotifications.isEmpty()) {
+			for (Integer id : mNotifications) {
+				hideNotification(mNotificationManager, id);
+			}
+			mNotifications.clear();
 		}
 		setShowNotification(false);
 	}
@@ -229,25 +258,14 @@ public class StorageInfoApplication extends Application {
 			showDebuggingMessage(context, action);
 			if ("android.intent.action.MEDIA_MOUNTED".contains(action)) {
 				if (isUsbDeviceConnected(context)
-						&& dataString.startsWith("file:")
-						&& mStoragePath == null) {
-					mStoragePath = dataPath;
-					updateStorageState();
-					if (isEnableNotifications() && !isShowNotification()) {
-						if (mStorageState == STORAGE_STATE.MOUNTED) {
-							showNotification();
-						}
+						&& dataString.startsWith("file:")) {
+					result = checkMountVolume(dataPath);
+					if (result) {
+						launchFileManager(dataPath);
 					}
-					updateNotificationText();
-					result = true;
 				}
-
 			} else if ("android.intent.action.MEDIA_UNMOUNTED".equals(action)) {
-				if (dataPath.equals(mStoragePath)) {
-					updateStorageState();
-					updateNotificationText();
-					result = true;
-				}
+				result = checkMountVolume(dataPath);
 			} else if ("android.intent.action.MEDIA_BAD_REMOVAL".equals(action)
 					|| "android.intent.action.MEDIA_EJECT".equals(action)
 					|| "android.intent.action.MEDIA_REMOVED".equals(action)
@@ -257,13 +275,8 @@ public class StorageInfoApplication extends Application {
 							.equals(action)
 					|| "com.sonyericsson.hardware.action.USB_OTG_DEVICE_DISCONNECTED"
 							.equals(action)) {
-				if (isShowNotification() && dataPath.equals(mStoragePath)) {
-					updateStorageState();
-					if (mStorageState == STORAGE_STATE.OTHER) {
-						mStoragePath = null;
-						hideNotification();
-					}
-					result = true;
+				if (isShowNotification()) {
+					result = checkMountVolume(dataPath);
 				}
 			}
 
@@ -272,42 +285,102 @@ public class StorageInfoApplication extends Application {
 	}
 
 	/**
-	 * Update storage state.
+	 * Obtain the mount volume for a specified storage id.
+	 * 
+	 * @param storageId
+	 *            The storage id of the mount volume.
+	 * @return The mount volume or null;
 	 */
-	public void updateStorageState() {
-		mStorageState = STORAGE_STATE.OTHER;
-		if (mStoragePath != null) {
-			String state = MountService.getVolumeState(getMountService(),
-					mStoragePath);
-			if (Environment.MEDIA_MOUNTED.equals(state)) {
-				mStorageState = STORAGE_STATE.MOUNTED;
-			} else if (Environment.MEDIA_UNMOUNTED.equals(state)) {
-				mStorageState = STORAGE_STATE.UNMOUNTED;
+	public MountVolume getMountVolume(int storageId) {
+		for (MountVolume mountVolume : mMountVolumes) {
+			if (mountVolume.getStorageId() == storageId) {
+				return mountVolume;
 			}
 		}
+		return null;
 	}
 
 	/**
-	 * Update the notification text.
+	 * Check if a path is on the mount volumes list.
+	 * 
+	 * @param path
+	 *            Path to be check.
+	 * @return True if the path is on the mount volumes list.
 	 */
-	public void updateNotificationText() {
-		if (isShowNotification() && isEnabledQuickStorageAccess()
-				&& mNotifBuilder != null && mNotificationManager != null) {
-			String title = mStoragePath != null ? getString(
-					R.string.notification_title_path, mStoragePath)
-					: getString(R.string.notification_title);
-			int textId = R.string.notification_message;
-			if (mStoragePath != null) {
-				textId = (mStorageState == STORAGE_STATE.MOUNTED ? R.string.quick_notification_unmount
-						: R.string.quick_notification_mount);
+	private boolean checkMountVolume(String path) {
+		boolean result = false;
+		for (MountVolume mountVolume : mMountVolumes) {
+			if (mountVolume.getPath().equals(path)) {
+				return true;
 			}
-			mNotifBuilder.setContentTitle(title);
-			mNotifBuilder.setContentText(getString(textId));
-
-			Notification notification = mNotifBuilder.build();
-			notification.flags |= Notification.FLAG_NO_CLEAR;
-			mNotificationManager.notify(NOTIFICATION_ID, notification);
 		}
+		return result;
+	}
+
+	/**
+	 * Update the notifications texts.
+	 */
+	public void updateNotifications() {
+		NotificationManager notificationManager = getNotificationManager();
+		if (isEnabledQuickStorageAccess() && notificationManager != null) {
+			String state;
+			int storageId;
+			List<Integer> notifList = new ArrayList<Integer>();
+			for (MountVolume mountVolume : mMountVolumes) {
+				if (mountVolume.isRemovable() && !mountVolume.isPrimary()) {
+					state = MountService.getVolumeState(getMountService(),
+							mountVolume.getPath());
+					storageId = mountVolume.getStorageId();
+					if (Environment.MEDIA_UNMOUNTED.equals(state)) {
+						notifList.add(storageId);
+						updateNotification(notificationManager, mountVolume,
+								storageId, state);
+					} else if (Environment.MEDIA_MOUNTED.equals(state)) {
+						notifList.add(storageId);
+						updateNotification(notificationManager, mountVolume,
+								storageId, state);
+					}
+				}
+			}
+			// hide unused notifications
+			for (Integer id : mNotifications) {
+				if (!notifList.contains(id)) {
+					hideNotification(notificationManager, id);
+				}
+			}
+			mNotifications = notifList;
+		}
+		setShowNotification(!mNotifications.isEmpty());
+	}
+
+	private void updateNotification(NotificationManager notificationManager,
+			MountVolume mountVolume, int storageId, String state) {
+		Intent intent = new Intent(this, StorageActivity.class);
+		intent.putExtra("storageId", storageId);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+				| Intent.FLAG_ACTIVITY_CLEAR_TASK);
+		PendingIntent pIntent = PendingIntent.getActivity(
+				this.getBaseContext(), storageId, intent, 0);
+		NotificationCompat.Builder notifBuilder = new NotificationCompat.Builder(
+				this);
+		notifBuilder.setSmallIcon(R.drawable.ic_launcher);
+		notifBuilder.setContentIntent(pIntent);
+		String path = mountVolume.getPath();
+		String text = path != null ? getString(
+				R.string.notification_title_path, path)
+				: getString(R.string.notification_message);
+
+		int titleId = R.string.notification_title;
+		if (path != null) {
+			titleId = (Environment.MEDIA_MOUNTED.equals(state) ? R.string.quick_notification_unmount
+					: R.string.quick_notification_mount);
+		}
+		notifBuilder.setContentTitle(getString(titleId));
+		notifBuilder.setContentText(text);
+
+		Notification notification = notifBuilder.build();
+		notification.flags |= Notification.FLAG_NO_CLEAR;
+		notificationManager.notify(storageId, notification);
 	}
 
 	/**
@@ -396,33 +469,6 @@ public class StorageInfoApplication extends Application {
 	}
 
 	/**
-	 * Check if the USB storage is mounted.
-	 * 
-	 * @return True, if an USB storage is mounted.
-	 */
-	public boolean isStorageMounted() {
-		return mStorageState == STORAGE_STATE.MOUNTED;
-	}
-
-	/**
-	 * Obtain the storage state.
-	 * 
-	 * @return The storage state could be: other, mounted or unmounted.
-	 */
-	public STORAGE_STATE getStorageState() {
-		return mStorageState;
-	}
-
-	/**
-	 * Retrieve USB storage path.
-	 * 
-	 * @return The USB storage path.
-	 */
-	public String getStoragePath() {
-		return mStoragePath;
-	}
-
-	/**
 	 * Display an exception dialog message.
 	 * 
 	 * @param listener
@@ -450,5 +496,90 @@ public class StorageInfoApplication extends Application {
 
 		AlertDialog alert = alertDialog.create();
 		alert.show();
+	}
+
+	/**
+	 * @return the fileManagers
+	 */
+	public List<AppInfo> getApplicationsList() {
+		return mApplicationsList;
+	}
+
+	/**
+	 * @param applicationsList
+	 *            the fileManagers to set
+	 */
+	public void setApplicationsList(List<AppInfo> applicationsList) {
+		this.mApplicationsList = applicationsList;
+	}
+
+	/**
+	 * This will show a progress dialog using a context and a message ID from
+	 * application string resources.
+	 * 
+	 * @param context
+	 *            The context where should be displayed the progress dialog.
+	 * @param messageId
+	 *            The string resource id.
+	 */
+	public void showProgressDialog(Context context, int messageId) {
+		hideProgressDialog();
+		mProgressDialog = ProgressDialog.show(context,
+				getString(R.string.please_wait), getString(messageId));
+	}
+
+	/**
+	 * Method used to hide the progress dialog.
+	 */
+	public void hideProgressDialog() {
+		if (mProgressDialog != null) {
+			mProgressDialog.dismiss();
+		}
+		mProgressDialog = null;
+	}
+
+	/**
+	 * Get file manager. If no file manager is set is returned "null" string.
+	 * 
+	 * @return File manager, default is the string "null".
+	 */
+	public String getFileManager() {
+		return mSharedPreferences.getString(FILE_MANAGER, "null");
+	}
+
+	/**
+	 * Set file manager.
+	 * 
+	 * @param fileManager
+	 *            The file manager to set.
+	 */
+	public void setFileManager(String fileManager) {
+		SharedPreferences.Editor editor = mSharedPreferences.edit();
+		editor.putString(FILE_MANAGER, fileManager);
+		editor.commit();
+	}
+
+	/**
+	 * Launch a file manager with the specified path.
+	 * 
+	 * @param path
+	 *            The specified path to be open on the file manager.
+	 */
+	public void launchFileManager(String path) {
+		String fileManager = getFileManager();
+		if (!"null".equals(fileManager)) {
+			try {
+				final PackageManager pm = getPackageManager();
+				Intent intent = pm.getLaunchIntentForPackage(fileManager);
+				intent.addCategory(Intent.CATEGORY_LAUNCHER);
+				intent.setType("*/*");
+				intent.setData(Uri.fromFile(new File(path)));
+				intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+						| Intent.FLAG_ACTIVITY_CLEAR_TASK);
+				startActivity(intent);
+			} catch (Exception e) {
+				Log.e(TAG, "file manager: " + fileManager + " path: " + path, e);
+			}
+		}
 	}
 }

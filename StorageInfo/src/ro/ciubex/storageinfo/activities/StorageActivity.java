@@ -20,7 +20,7 @@ package ro.ciubex.storageinfo.activities;
 
 import ro.ciubex.storageinfo.R;
 import ro.ciubex.storageinfo.StorageInfoApplication;
-import ro.ciubex.storageinfo.StorageInfoApplication.STORAGE_STATE;
+import ro.ciubex.storageinfo.model.MountVolume;
 import ro.ciubex.storageinfo.util.Utils.MountService;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -30,6 +30,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Window;
@@ -44,9 +45,10 @@ import android.view.Window;
 public class StorageActivity extends Activity implements DialogButtonListener {
 	static final String TAG = StorageActivity.class.getName();
 	private StorageInfoApplication mApplication;
-	private String mStoragePath;
 	private static final int ALERT_UNMOUNT = 0;
 	private static final int ALERT_MOUNT = 1;
+	private MountVolume mMountVolume;
+	private String mMountState;
 
 	/**
 	 * Called when the activity is starting.
@@ -63,9 +65,27 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 		setContentView(R.layout.storage_layout);
 		getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON,
 				android.R.drawable.ic_dialog_alert);
-		Application application = getApplication();
+		initActivity(getApplication());
+	}
+
+	@Override
+	protected void onNewIntent(Intent intent) {
+		super.onNewIntent(intent);
+		initActivity(getApplication());
+	}
+
+	private void initActivity(Application application) {
 		if (application instanceof StorageInfoApplication) {
 			mApplication = (StorageInfoApplication) application;
+			int storageId = getIntent().getIntExtra("storageId", -1);
+			if (storageId != -1) {
+				mMountVolume = mApplication.getMountVolume(storageId);
+				if (mMountVolume != null) {
+					mMountState = MountService.getVolumeState(
+							mApplication.getMountService(),
+							mMountVolume.getPath());
+				}
+			}
 		}
 	}
 
@@ -82,8 +102,7 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 	 * Prepare this activity for unmount, mount or storage settings.
 	 */
 	private void prepareActivity() {
-		mStoragePath = mApplication.getStoragePath();
-		if (mApplication.getStorageState() != STORAGE_STATE.OTHER) {
+		if (mMountVolume != null) {
 			prepareActivityText();
 		} else {
 			showStorageSettings();
@@ -94,8 +113,7 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 	 * Prepare texts for this activity.
 	 */
 	private void prepareActivityText() {
-		if (mStoragePath != null
-				&& mApplication.getStorageState() == STORAGE_STATE.MOUNTED) {
+		if (Environment.MEDIA_MOUNTED.equals(mMountState)) {
 			setTitle(R.string.confirm_unmount_title);
 			showDialog(ALERT_UNMOUNT);
 		} else {
@@ -113,17 +131,17 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 	protected Dialog onCreateDialog(int id) {
 		Dialog dialog = null;
 		AlertDialog.Builder builder = null;
+		String path = mMountVolume.getPath();
 		switch (id) {
 		case ALERT_UNMOUNT:
 			builder = new AlertDialog.Builder(this);
 			builder.setTitle(R.string.confirm_unmount_title).setMessage(
-					mApplication.getString(R.string.confirm_unmount_text,
-							mStoragePath));
+					getString(R.string.confirm_unmount_text, path));
 			break;
 		case ALERT_MOUNT:
 			builder = new AlertDialog.Builder(this);
 			builder.setTitle(R.string.confirm_mount_title).setMessage(
-					R.string.confirm_mount_text);
+					getString(R.string.confirm_mount_text, path));
 			break;
 		}
 		if (builder != null) {
@@ -148,7 +166,7 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 	}
 
 	private void onClickOk() {
-		if (mApplication.getStorageState() == STORAGE_STATE.MOUNTED) {
+		if (Environment.MEDIA_MOUNTED.equals(mMountState)) {
 			doUnmount();
 		} else {
 			doMount();
@@ -173,16 +191,18 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 	 * Do unmount
 	 */
 	private void doUnmount() {
-		if (mStoragePath != null) {
+		if (mMountVolume != null) {
+			String path = mMountVolume.getPath();
 			try {
 				MountService.unmountVolume(mApplication.getMountService(),
-						mStoragePath, true);
+						path, true);
 				finish();
 			} catch (Exception e) {
 				Log.e(TAG, e.getMessage(), e);
-				mApplication.showExceptionMessage(this, mApplication
-						.getString(R.string.error_unmount_title), mApplication
-						.getString(R.string.error_unmount_text, mStoragePath, e
+				mApplication.showExceptionMessage(
+						this,
+						getString(R.string.error_unmount_title),
+						getString(R.string.error_unmount_text, path, e
 								.getMessage(), (e.getCause() != null) ? e
 								.getCause().getCause() : "null"));
 			}
@@ -193,18 +213,26 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 	 * Do mount
 	 */
 	private void doMount() {
-		if (mStoragePath != null) {
+		if (mMountVolume != null) {
+			String path = mMountVolume.getPath();
 			try {
-				MountService.mountVolume(mApplication.getMountService(),
-						mStoragePath);
-				finish();
+				int result = MountService.mountVolume(
+						mApplication.getMountService(), path);
+				if (result != 0) {
+					mApplication.showExceptionMessage(this,
+							getString(R.string.error_mount_title),
+							getString(R.string.error_mount_detach_text, path));
+				} else {
+					finish();
+				}
 			} catch (Exception e) {
 				Log.e(TAG, e.getMessage(), e);
-				mApplication.showExceptionMessage(this, mApplication
-						.getString(R.string.error_mount_title), mApplication
-						.getString(R.string.error_mount_text, e.getMessage(),
-								(e.getCause() != null) ? e.getCause()
-										.getCause() : "null"));
+				mApplication.showExceptionMessage(
+						this,
+						getString(R.string.error_mount_title),
+						getString(R.string.error_mount_text, e.getMessage(), (e
+								.getCause() != null) ? e.getCause().getCause()
+								: "null"));
 			}
 		}
 	}
