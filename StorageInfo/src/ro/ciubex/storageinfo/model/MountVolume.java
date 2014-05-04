@@ -31,6 +31,7 @@ import android.content.Context;
 public class MountVolume {
 	private int mStorageId;
 	private int mDescriptionId;
+	private String mDescription;
 	private File mPath;
 	private boolean mRemovable;
 	private boolean mPrimary;
@@ -71,6 +72,23 @@ public class MountVolume {
 
 	public void setDescriptionId(int descriptionId) {
 		this.mDescriptionId = descriptionId;
+	}
+
+	/**
+	 * Returns a user visible description of the volume.
+	 * 
+	 * @return the volume description
+	 */
+	public String getDescription() {
+		return mDescription;
+	}
+
+	/**
+	 * @param description
+	 *            the mDescription to set
+	 */
+	public void setDescription(String description) {
+		this.mDescription = description;
 	}
 
 	/**

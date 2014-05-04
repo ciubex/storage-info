@@ -51,7 +51,9 @@ public class Utils {
 
 	private static Method METHOD_StorageVolume_getStorageId;
 	private static Method METHOD_StorageVolume_getDescriptionId;
+	private static Method METHOD_StorageVolume_getDescription;
 	private static Method METHOD_StorageVolume_getPathFile;
+	private static Method METHOD_StorageVolume_getPath;
 	private static Method METHOD_StorageVolume_isRemovable;
 	private static Method METHOD_StorageVolume_isPrimary;
 
@@ -91,8 +93,12 @@ public class Utils {
 				methodName = method.getName();
 				if ("getStorageId".equals(methodName)) {
 					METHOD_StorageVolume_getStorageId = method;
+				} else if ("getDescription".equals(methodName)) {
+					METHOD_StorageVolume_getDescription = method;
 				} else if ("getDescriptionId".equals(methodName)) {
 					METHOD_StorageVolume_getDescriptionId = method;
+				} else if ("getPath".equals(methodName)) {
+					METHOD_StorageVolume_getPath = method;
 				} else if ("getPathFile".equals(methodName)) {
 					METHOD_StorageVolume_getPathFile = method;
 				} else if ("isRemovable".equals(methodName)) {
@@ -189,7 +195,7 @@ public class Utils {
 				MountVolume volume;
 				for (Object obj : arr) {
 					volume = prepareMountVolume(obj);
-					if (volume != null) {
+					if (volume != null && volume.isRemovable()) {
 						volumes.add(volume);
 					}
 				}
@@ -205,14 +211,27 @@ public class Utils {
 					volume = new MountVolume();
 					volume.setStorageId((Integer) invoke(
 							METHOD_StorageVolume_getStorageId, obj));
-					volume.setDescriptionId((Integer) invoke(
-							METHOD_StorageVolume_getDescriptionId, obj));
-					volume.setPathFile((File) invoke(
-							METHOD_StorageVolume_getPathFile, obj));
-					volume.setPrimary((Boolean) invoke(
-							METHOD_StorageVolume_isPrimary, obj));
+					if (METHOD_StorageVolume_getPathFile != null) {
+						volume.setPathFile((File) invoke(
+								METHOD_StorageVolume_getPathFile, obj));
+					} else if (METHOD_StorageVolume_getPath != null) {
+						String path = (String) invoke(
+								METHOD_StorageVolume_getPath, obj);
+						volume.setPathFile(new File(path));
+					}
+					if (METHOD_StorageVolume_isPrimary != null) {
+						volume.setPrimary((Boolean) invoke(
+								METHOD_StorageVolume_isPrimary, obj));
+					}
 					volume.setRemovable((Boolean) invoke(
 							METHOD_StorageVolume_isRemovable, obj));
+					if (METHOD_StorageVolume_getDescriptionId != null) {
+						volume.setDescriptionId((Integer) invoke(
+								METHOD_StorageVolume_getDescriptionId, obj));
+					} else if (METHOD_StorageVolume_getDescription != null) {
+						volume.setDescription((String) invoke(
+								METHOD_StorageVolume_getDescription, obj));
+					}
 				} catch (Exception e) {
 					Log.e(TAG, e.getMessage(), e);
 					throw new AndroidRuntimeException(e);
