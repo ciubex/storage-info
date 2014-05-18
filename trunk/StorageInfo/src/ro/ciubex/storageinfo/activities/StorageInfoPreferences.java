@@ -47,6 +47,7 @@ public class StorageInfoPreferences extends PreferenceActivity implements
 		ScanForApplications.Listener, DialogButtonListener {
 	private StorageInfoApplication mApplication;
 	private Preference mSetFileManager;
+	private Preference mMakeDonation;
 	private final int CONFIRM_ID_DONATE = 1;
 
 	/**
@@ -58,6 +59,7 @@ public class StorageInfoPreferences extends PreferenceActivity implements
 		mApplication = (StorageInfoApplication) getApplication();
 		addPreferencesFromResource(R.xml.application_preferences);
 		prepareCommands();
+		checkProVersion();
 	}
 
 	/**
@@ -105,7 +107,8 @@ public class StorageInfoPreferences extends PreferenceActivity implements
 						return onShowAbout();
 					}
 				});
-		((Preference) findPreference("makeDonation"))
+		mMakeDonation = (Preference) findPreference("makeDonation");
+		mMakeDonation
 				.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
 					@Override
@@ -113,6 +116,14 @@ public class StorageInfoPreferences extends PreferenceActivity implements
 						return onMakeDonation();
 					}
 				});
+	}
+
+	private void checkProVersion() {
+		if (mApplication.isProPresent()) {
+			mMakeDonation.setEnabled(false);
+			mMakeDonation.setTitle(R.string.thank_you_title);
+			mMakeDonation.setSummary(R.string.thank_you_desc);
+		}
 	}
 
 	/*
@@ -218,7 +229,7 @@ public class StorageInfoPreferences extends PreferenceActivity implements
 	 */
 	private boolean onMakeDonation() {
 		showConfirmationDialog(R.string.donate_title,
-				mApplication.getString(R.string.donate_message),
+				mApplication.getString(R.string.donate_confirmation),
 				CONFIRM_ID_DONATE, null);
 		return true;
 	}

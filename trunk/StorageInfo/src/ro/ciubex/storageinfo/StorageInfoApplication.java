@@ -581,4 +581,22 @@ public class StorageInfoApplication extends Application {
 			}
 		}
 	}
+
+	/**
+	 * Check for pro version.
+	 * 
+	 * @return True if pro version exist.
+	 */
+	public boolean isProPresent() {
+		PackageManager pm = getPackageManager();
+		boolean success = false;
+		try {
+			success = (PackageManager.SIGNATURE_MATCH == pm.checkSignatures(
+					this.getPackageName(), "ro.ciubex.storageinfopro"));
+			Log.d(TAG, "isProPresent: " + success);
+		} catch (Exception e) {
+			Log.e(TAG, "isProPresent: " + e.getMessage(), e);
+		}
+		return success;
+	}
 }
