@@ -62,9 +62,11 @@
     <string name="donate_btn_title">Donate</string>
     <string name="donate_btn_message">Only if you want to appreciate my work.</string>
     <string name="donate_title">Donation confirmation</string>
-    <string name="donate_message">If you appreciate this application, please do a donation!\nPressing YES button, you will be sent using your default browser to a PayPal donnation page.\nThank you for using this application!</string>
-    <string name="donate_url"><Data><![CDATA[https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=claudiu_ciobotariu%40yahoo%2ecom&lc=RO&item_name=Ciubex&item_number=Storage%20Info%20Donation&currency_code=EUR&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted]]></Data></string>
-
+    <string name="donate_confirmation">If you appreciate this application, please do a donation buying Storage Info PRO!\nPressing YES button, you will be sent to Storage Info PRO from Google Play Store.\nThank you for using this application!</string>
+    <string name="donate_url"><Data><![CDATA[https://play.google.com/store/apps/details?id=ro.ciubex.storageinfopro]]></Data></string>
+    <string name="thank_you_title">Thank you for donation!</string>
+    <string name="thank_you_desc">Thank you for the appreciation of my work, buying pro application.</string>
+    
     <!-- About -->
     <string name="about_storage_info">About Storage Info</string>
     <string name="about">About</string>
