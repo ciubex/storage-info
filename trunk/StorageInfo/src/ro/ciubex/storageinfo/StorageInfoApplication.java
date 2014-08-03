@@ -291,9 +291,11 @@ public class StorageInfoApplication extends Application {
 	 * @return The mount volume or null;
 	 */
 	public MountVolume getMountVolume(int storageId) {
-		for (MountVolume mountVolume : mMountVolumes) {
-			if (mountVolume.getStorageId() == storageId) {
-				return mountVolume;
+		if (mMountVolumes != null) {
+			for (MountVolume mountVolume : mMountVolumes) {
+				if (mountVolume.getStorageId() == storageId) {
+					return mountVolume;
+				}
 			}
 		}
 		return null;
@@ -308,9 +310,11 @@ public class StorageInfoApplication extends Application {
 	 */
 	private boolean checkMountVolume(String path) {
 		boolean result = false;
-		for (MountVolume mountVolume : mMountVolumes) {
-			if (mountVolume.getPath().equals(path)) {
-				return true;
+		if (mMountVolumes != null) {
+			for (MountVolume mountVolume : mMountVolumes) {
+				if (mountVolume.getPath().equals(path)) {
+					return true;
+				}
 			}
 		}
 		return result;
@@ -325,19 +329,21 @@ public class StorageInfoApplication extends Application {
 			String state;
 			int storageId;
 			List<Integer> notifList = new ArrayList<Integer>();
-			for (MountVolume mountVolume : mMountVolumes) {
-				if (mountVolume.isRemovable() && !mountVolume.isPrimary()) {
-					state = MountService.getVolumeState(getMountService(),
-							mountVolume.getPath());
-					storageId = mountVolume.getStorageId();
-					if (Environment.MEDIA_UNMOUNTED.equals(state)) {
-						notifList.add(storageId);
-						updateNotification(notificationManager, mountVolume,
-								storageId, state);
-					} else if (Environment.MEDIA_MOUNTED.equals(state)) {
-						notifList.add(storageId);
-						updateNotification(notificationManager, mountVolume,
-								storageId, state);
+			if (mMountVolumes != null) {
+				for (MountVolume mountVolume : mMountVolumes) {
+					if (mountVolume.isRemovable() && !mountVolume.isPrimary()) {
+						state = MountService.getVolumeState(getMountService(),
+								mountVolume.getPath());
+						storageId = mountVolume.getStorageId();
+						if (Environment.MEDIA_UNMOUNTED.equals(state)) {
+							notifList.add(storageId);
+							updateNotification(notificationManager,
+									mountVolume, storageId, state);
+						} else if (Environment.MEDIA_MOUNTED.equals(state)) {
+							notifList.add(storageId);
+							updateNotification(notificationManager,
+									mountVolume, storageId, state);
+						}
 					}
 				}
 			}
