@@ -114,7 +114,9 @@ public class Utils {
 
 	private static Object invoke(Method method, Object receiver, Object... args) {
 		try {
-			return method.invoke(receiver, args);
+			if (method != null) {
+				return method.invoke(receiver, args);
+			}
 		} catch (IllegalArgumentException e) {
 			Log.e(TAG, e.getMessage(), e);
 			throw new AndroidRuntimeException(e);
@@ -128,6 +130,7 @@ public class Utils {
 			Log.e(TAG, e.getMessage(), e);
 			throw new AndroidRuntimeException(e);
 		}
+		return null;
 	}
 
 	public static class MountService {
