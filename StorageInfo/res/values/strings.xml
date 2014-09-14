@@ -38,6 +38,7 @@
     <string name="please_wait">Please wait&#8230;</string>
     <string name="scan_for_applications">Scan for applications&#8230;</string>
     <string name="no_application">No application available!</string>
+    <string name="no_activity_exception">Seems you have a customized Android version:\n%s</string>
 
     <!-- Storage activity dialog -->
     <string name="quick_notification_mount">Touch to mount the storage.</string>

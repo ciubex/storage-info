@@ -22,6 +22,8 @@ import ro.ciubex.storageinfo.R;
 import ro.ciubex.storageinfo.StorageInfoApplication;
 import android.app.Activity;
 import android.app.Application;
+import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -33,7 +35,7 @@ import android.view.Window;
  * @author Claudiu Ciobotariu
  * 
  */
-public class IntroActivity extends Activity {
+public class IntroActivity extends Activity implements DialogButtonListener {
 	private StorageInfoApplication mApplication;
 
 	/**
@@ -78,8 +80,14 @@ public class IntroActivity extends Activity {
 	private void showStorageSettings() {
 		Intent intent = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
 		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(intent);
-		finish();
+		try {
+			startActivity(intent);
+			finish();
+		} catch (ActivityNotFoundException e) {
+			mApplication.showExceptionMessage(this,
+					getString(R.string.app_name), 
+					getString(R.string.no_activity_exception, e.getMessage()));
+		}
 	}
 
 	/**
@@ -89,6 +97,16 @@ public class IntroActivity extends Activity {
 		Intent intent = new Intent(this, StorageInfoPreferences.class);
 		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		startActivity(intent);
+		finish();
+	}
+
+	@Override
+	public Context getContext() {
+		return this;
+	}
+
+	@Override
+	public void onButtonClicked(int buttonId) {
 		finish();
 	}
 
