@@ -31,8 +31,12 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.ListPreference;
+import android.preference.MultiSelectListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.provider.Settings;
@@ -44,10 +48,13 @@ import android.provider.Settings;
  * 
  */
 public class StorageInfoPreferences extends PreferenceActivity implements
-		ScanForApplications.Listener, DialogButtonListener {
+		ScanForApplications.Listener, DialogButtonListener,
+		OnSharedPreferenceChangeListener {
 	private StorageInfoApplication mApplication;
 	private Preference mSetFileManager;
 	private Preference mMakeDonation;
+	private ListPreference mNotificationType;
+	private MultiSelectListPreference mDisabledPaths;
 	private final int CONFIRM_ID_DONATE = 1;
 
 	/**
@@ -74,6 +81,8 @@ public class StorageInfoPreferences extends PreferenceActivity implements
 						return onShowStorageInfo();
 					}
 				});
+		mNotificationType = (ListPreference) findPreference("notificationType");
+		mDisabledPaths = (MultiSelectListPreference) findPreference("disabledPaths");
 		mSetFileManager = (Preference) findPreference("setFileManager");
 		mSetFileManager
 				.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -134,7 +143,19 @@ public class StorageInfoPreferences extends PreferenceActivity implements
 	@Override
 	protected void onResume() {
 		super.onResume();
+		getPreferenceScreen().getSharedPreferences()
+				.registerOnSharedPreferenceChangeListener(this);
 		prepareTexts();
+	}
+
+	/**
+	 * Unregister the preference changes when the activity is on pause
+	 */
+	@Override
+	protected void onPause() {
+		super.onPause();
+		getPreferenceScreen().getSharedPreferences()
+				.unregisterOnSharedPreferenceChangeListener(this);
 	}
 
 	/**
@@ -147,6 +168,24 @@ public class StorageInfoPreferences extends PreferenceActivity implements
 			AppInfo appInfo = Utils.getFileManager(getPackageManager(),
 					fileManager);
 			text = getString(R.string.file_manager_selected, appInfo.getName());
+		}
+		String[] arr = mApplication.getMountVolumesPathsArray();
+		if (arr.length > 0) {
+			mDisabledPaths.setEntries(arr);
+			mDisabledPaths.setEntryValues(arr);
+		}
+		arr = mApplication.getDisabledPaths();
+		if (arr.length > 0) {
+			mDisabledPaths.setSummary(getString(
+					R.string.disabled_paths_desc_paths, Utils.join(arr, ", ")));
+		} else {
+			mDisabledPaths.setSummary(R.string.disabled_paths_desc);
+		}
+		int type = mApplication.getNotificationType();
+		if (type > StorageInfoApplication.NOTIFICATION_TYPE_DISABLED) {
+			arr = getResources()
+					.getStringArray(R.array.notification_type_array);
+			mNotificationType.setSummary(arr[type]);
 		}
 		mSetFileManager.setTitle(text);
 	}
@@ -189,10 +228,11 @@ public class StorageInfoPreferences extends PreferenceActivity implements
 			if (mApplication.isShowNotification()) {
 				mApplication.hideAllNotifications();
 			} else {
-				if (mApplication.isEnabledQuickStorageAccess()) {
-					mApplication.updateMountVolumes();
+				mApplication.updateMountVolumes();
+				int type = mApplication.getNotificationType();
+				if (StorageInfoApplication.NOTIFICATION_TYPE_QUICK == type) {
 					mApplication.updateNotifications();
-				} else {
+				} else if (StorageInfoApplication.NOTIFICATION_TYPE_STORAGE == type) {
 					mApplication.showDefaultNotification();
 				}
 			}
@@ -394,5 +434,26 @@ public class StorageInfoPreferences extends PreferenceActivity implements
 	@Override
 	public StorageInfoApplication getStorageInfoApplication() {
 		return mApplication;
+	}
+
+	/**
+	 * Called when a shared preference is changed, added, or removed. This may
+	 * be called even if a preference is set to its existing value.
+	 * 
+	 * <p>
+	 * This callback will be run on your main thread.
+	 * 
+	 * @param sharedPreferences
+	 *            The {@link SharedPreferences} that received the change.
+	 * @param key
+	 *            The key of the preference that was changed, added, or removed.
+	 */
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
+			String key) {
+		if ("disabledPaths".equals(key)) {
+			mApplication.updateDisabledPaths();
+		}
+		prepareTexts();
 	}
 }

@@ -15,25 +15,32 @@
             android:key="enableNotifications"
             android:summary="@string/enable_notifications_desc"
             android:title="@string/enable_notifications" />
-        <CheckBoxPreference
-            android:defaultValue="true"
+
+        <ListPreference
+            android:defaultValue="-1"
             android:dependency="enableNotifications"
-            android:key="enableStorageInfo"
-            android:summary="@string/enable_storage_info_desc"
-            android:title="@string/enable_storage_info" />
-        <CheckBoxPreference
-            android:defaultValue="false"
+            android:entries="@array/notification_type_array"
+            android:entryValues="@array/notification_type_values"
+            android:key="notificationType"
+            android:summary="@string/notification_type_desc"
+            android:title="@string/notification_type" />
+
+        <MultiSelectListPreference
+            android:defaultValue="@array/empty_array"
             android:dependency="enableNotifications"
-            android:key="enableQuickStorageAccess"
-            android:summary="@string/enable_quick_storage_access_info_desc"
-            android:title="@string/enable_quick_storage_access_info" />
+            android:entries="@array/empty_array"
+            android:entryValues="@array/empty_array"
+            android:key="disabledPaths"
+            android:summary="@string/disabled_paths_desc"
+            android:title="@string/disabled_paths" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/other" >
-        <Preference android:dependency="enableNotifications"
+        <Preference
+            android:dependency="enableNotifications"
             android:key="setFileManager"
             android:persistent="false"
             android:summary="@string/file_manager_desc"
-            android:title="@string/file_manager"/>
+            android:title="@string/file_manager" />
         <Preference
             android:dependency="enableNotifications"
             android:key="toggleNotification"
