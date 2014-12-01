@@ -146,18 +146,18 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 		}
 		if (builder != null) {
 			builder.setCancelable(false)
-					.setPositiveButton(R.string.ok,
-							new DialogInterface.OnClickListener() {
-								public void onClick(DialogInterface dialog,
-										int id) {
-									onClickOk();
-								}
-							})
 					.setNegativeButton(R.string.cancel,
 							new DialogInterface.OnClickListener() {
 								public void onClick(DialogInterface dialog,
 										int id) {
 									onClickCancel();
+								}
+							})
+					.setPositiveButton(R.string.ok,
+							new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog,
+										int id) {
+									onClickOk();
 								}
 							});
 			dialog = builder.create();

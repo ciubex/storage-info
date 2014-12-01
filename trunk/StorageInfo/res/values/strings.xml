@@ -11,7 +11,7 @@
     <!-- Notifications -->
     <string name="notification_title">Storage Info</string>
     <string name="notification_title_path">%s</string>
-    <string name="notification_message">Touch to see storage settings</string>
+    <string name="notification_message">Touch to see Storage Settings</string>
 
     <!-- Settings -->
     <string name="show_storage_info">Show Storage Settings</string>
@@ -20,11 +20,22 @@
     <string name="settings_summary">Storage Info settings</string>
     <string name="general_settings">Settings</string>
     <string name="enable_notifications">Enable notifications</string>
-    <string name="enable_notifications_desc">Enable notification to launch the storage when an USB storage is pluged.</string>
-    <string name="enable_storage_info">Enable Storage Info</string>
-    <string name="enable_storage_info_desc">By checking this the application will open your phone Storage Info when an USB storage is pluged. Otherwise will be open this settings window.</string>
-    <string name="enable_quick_storage_access_info">Enable quick storage access.</string>
-    <string name="enable_quick_storage_access_info_desc">By checking this on the notification will be created a quick access to mounting or unmounting USB storage. Uncheck this if you have issues with quick mount or unmount.</string>
+    <string name="enable_notifications_desc">Enable notification when an USB storage is pluged.</string>
+    <string name="notification_type">Notification type</string>
+    <string name="notification_type_desc">Chose what shortcut should be created on the notification bar when an USB storage is pluged.</string>
+
+    <string-array name="notification_type_array">
+        <item>Create a notification shortcut to default Storage Settings application when an USB storage is pluged.</item>
+        <item>Create a quick unmount/mount shortcut for available storage devices. (Check first choice if you encounter with errors)</item>
+    </string-array>
+    <string-array name="notification_type_values">
+        <item>0</item>
+        <item>1</item>
+    </string-array>
+
+    <string name="disabled_paths">Disabled paths</string>
+    <string name="disabled_paths_desc">Choose what paths should not be (un)mount.</string>
+    <string name="disabled_paths_desc_paths">Do not (un)mount: %s</string>
     <string name="other">Other</string>
     <string name="file_manager">Select a file manager</string>
     <string name="file_manager_desc">Select a file manager to be launched when a storage is mounted.</string>
@@ -40,9 +51,11 @@
     <string name="no_application">No application available!</string>
     <string name="no_activity_exception">Seems you have a customized Android version:\n%s</string>
 
+    <string-array name="empty_array" />
+
     <!-- Storage activity dialog -->
-    <string name="quick_notification_mount">Touch to mount the storage.</string>
-    <string name="quick_notification_unmount">Touch to unmount the storage.</string>
+    <string name="quick_notification_mount">Touch to mount:</string>
+    <string name="quick_notification_unmount">Touch to unmount:</string>
     <string name="confirm_mount_title">Mount storage</string>
     <string name="confirm_mount_text">Mount the storage on the path: \"%s\".</string>
     <string name="confirm_unmount_title">Unmount storage.</string>
@@ -50,10 +63,10 @@
     <string name="error_unmount_title">Unmounting storage failed</string>
     <string name="error_unmount_text_no_error">Cannot unmount USB storage with the path: \"%s\".\nTry again later.\nIf the error persist please uncheck the quick storage access.</string>
     <string name="error_unmount_text">Cannot unmount storage with the path: \"%1$s\".\nTry again later.\nIf the error persist please uncheck the quick storage access.\nThe error:\n%2$s.\nThe cause:\n%3$s.</string>
-	<string name="error_mount_title">Mounting storage failed</string>
-	<string name="error_mount_detach_text">Cannot mount storage with the path: \"%s\".\nTry to detach and attach again your device.</string>
+    <string name="error_mount_title">Mounting storage failed</string>
+    <string name="error_mount_detach_text">Cannot mount storage with the path: \"%s\".\nTry to detach and attach again your device.</string>
     <string name="error_mount_text">Cannot mount storage. Try again later.\nIf the error persist please uncheck the quick storage access.\nThe error:\n%1$s.\nThe cause:\n%2$s.</string>
-    
+
     <!-- License -->
     <string name="license">License</string>
     <string name="show_license">Show License</string>
@@ -67,7 +80,7 @@
     <string name="donate_url"><Data><![CDATA[https://play.google.com/store/apps/details?id=ro.ciubex.storageinfopro]]></Data></string>
     <string name="thank_you_title">Thank you for donation!</string>
     <string name="thank_you_desc">Thank you for the appreciation of my work, buying pro application.</string>
-    
+
     <!-- About -->
     <string name="about_storage_info">About Storage Info</string>
     <string name="about">About</string>

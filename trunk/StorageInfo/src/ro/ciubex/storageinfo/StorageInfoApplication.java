@@ -21,7 +21,9 @@ package ro.ciubex.storageinfo;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import ro.ciubex.storageinfo.activities.DialogButtonListener;
@@ -66,17 +68,24 @@ public class StorageInfoApplication extends Application {
 	private static final String FIRST_TIME = "firstTime";
 	private static final String SHOW_NOTIFICATION = "showNotification";
 	private static final String ENABLE_NOTIFICATIONS = "enableNotifications";
-	private static final String ENABLE_STORAGE_INFO = "enableStorageInfo";
-	private static final String ENABLE_QUICK_STORAGE_ACCESS = "enableQuickStorageAccess";
+	private static final String NOTIFICATION_TYPE = "notificationType";
+	private static final String DISABLED_PATHS = "disabledPaths";
 	private static final String DEBUGGING_ENABLED = "debuggingEnabled";
 	private static final String FILE_MANAGER = "fileManager";
 	private NotificationManager mNotificationManager;
 	private Object mMountService;
 	private List<MountVolume> mMountVolumes;
+	private List<String> mMountVolumesPaths;
+	private boolean mVolumeMounded;
+	private String[] mDisabledPaths;
 	private List<Integer> mNotifications;
 	private static final int DEFAULT_NOTIFICATION_ID = 0;
 	private List<AppInfo> mApplicationsList;
 	private ProgressDialog mProgressDialog;
+
+	public static final int NOTIFICATION_TYPE_DISABLED = -1;
+	public static final int NOTIFICATION_TYPE_STORAGE = 0;
+	public static final int NOTIFICATION_TYPE_QUICK = 1;
 
 	/**
 	 * This method is invoked when the application is created.
@@ -90,6 +99,7 @@ public class StorageInfoApplication extends Application {
 		mSharedPreferences = PreferenceManager
 				.getDefaultSharedPreferences(this);
 		mNotifications = new ArrayList<Integer>();
+		mMountVolumesPaths = new ArrayList<String>();
 		updateMountVolumes();
 	}
 
@@ -98,6 +108,100 @@ public class StorageInfoApplication extends Application {
 	 */
 	public void updateMountVolumes() {
 		mMountVolumes = MountService.getVolumeList(getMountService());
+		if (!mMountVolumesPaths.isEmpty()) {
+			mMountVolumesPaths.clear();
+		}
+		mVolumeMounded = false;
+		if (!mMountVolumes.isEmpty()) {
+			String path;
+			for (MountVolume mountVolume : mMountVolumes) {
+				path = mountVolume.getPath();
+				mMountVolumesPaths.add(path);
+				if (!isDisabledPath(path)
+						&& Environment.MEDIA_MOUNTED.equals(mountVolume
+								.getVolumeState())) {
+					mVolumeMounded = true;
+				}
+			}
+		}
+	}
+
+	/**
+	 * Check if currently are volume mounted. Only available volumes are
+	 * counting.
+	 * 
+	 * @return True if the volume are mounted.
+	 */
+	public boolean haveVolumeMounded() {
+		return mVolumeMounded;
+	}
+
+	/**
+	 * Get the mount volumes paths list.
+	 * 
+	 * @return Mount volumes paths list.
+	 */
+	public List<String> getMountVolumesPaths() {
+		return mMountVolumesPaths;
+	}
+
+	/**
+	 * Get the mount volumes paths as a string array.
+	 * 
+	 * @return Mount volumes paths as a string array.
+	 */
+	public String[] getMountVolumesPathsArray() {
+		int i = 0;
+		int len = mMountVolumesPaths.size();
+		String[] arr = new String[len];
+		for (String path : mMountVolumesPaths) {
+			arr[i++] = path;
+		}
+		return arr;
+	}
+
+	/**
+	 * Get an array strings with disabled paths.
+	 * 
+	 * @return An array strings with disabled paths.
+	 */
+	public String[] getDisabledPaths() {
+		if (mDisabledPaths == null) {
+			Set<String> stringSet = mSharedPreferences.getStringSet(
+					DISABLED_PATHS, new HashSet<String>());
+			int len = stringSet.size();
+			int i = 0;
+			mDisabledPaths = new String[len];
+			for (String path : stringSet) {
+				mDisabledPaths[i++] = path;
+			}
+		}
+		return mDisabledPaths;
+	}
+
+	/**
+	 * Update disabled paths.
+	 */
+	public void updateDisabledPaths() {
+		mDisabledPaths = null;
+		getDisabledPaths();
+	}
+
+	/**
+	 * Check if a path is marked as disabled.
+	 * 
+	 * @param path
+	 *            Path to be verified.
+	 * @return True, if the path is marked as disabled.
+	 */
+	public boolean isDisabledPath(String path) {
+		String[] array = getDisabledPaths();
+		for (String item : array) {
+			if (item.equals(path)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -172,15 +276,6 @@ public class StorageInfoApplication extends Application {
 		return mSharedPreferences.getBoolean(ENABLE_NOTIFICATIONS, true);
 	}
 
-	/**
-	 * Check if the storage info is enabled.
-	 * 
-	 * @return True if the storage info is enabled.
-	 */
-	public boolean isEnableStorageInfo() {
-		return mSharedPreferences.getBoolean(ENABLE_STORAGE_INFO, true);
-	}
-
 	private NotificationManager getNotificationManager() {
 		if (mNotificationManager == null) {
 			mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -194,25 +289,36 @@ public class StorageInfoApplication extends Application {
 	public void showDefaultNotification() {
 		NotificationManager notificationManager = getNotificationManager();
 		if (notificationManager != null) {
-			Intent intent = new Intent(
-					Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
-			NotificationCompat.Builder notifBuilder = new NotificationCompat.Builder(
-					this);
+			if (mVolumeMounded) {
+				if (mNotifications.isEmpty()) {
+					Intent intent = new Intent(
+							Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
+					NotificationCompat.Builder notifBuilder = new NotificationCompat.Builder(
+							this);
 
-			PendingIntent pIntent = PendingIntent.getActivity(
-					this.getBaseContext(), 0, intent, 0);
+					PendingIntent pIntent = PendingIntent.getActivity(
+							this.getBaseContext(), 0, intent, 0);
 
-			notifBuilder
-					.setContentTitle(this.getText(R.string.notification_title))
-					.setContentText(this.getText(R.string.notification_message))
-					.setSmallIcon(R.drawable.ic_launcher);
+					notifBuilder
+							.setContentTitle(
+									this.getText(R.string.notification_title))
+							.setContentText(
+									this.getText(R.string.notification_message))
+							.setSmallIcon(R.drawable.ic_launcher);
 
-			notifBuilder.setContentIntent(pIntent);
+					notifBuilder.setContentIntent(pIntent);
 
-			Notification notification = notifBuilder.build();
-			notification.flags |= Notification.FLAG_NO_CLEAR;
-			notificationManager.notify(DEFAULT_NOTIFICATION_ID, notification);
-			mNotifications.add(DEFAULT_NOTIFICATION_ID);
+					Notification notification = notifBuilder.build();
+					notification.flags |= Notification.FLAG_NO_CLEAR;
+					notificationManager.notify(DEFAULT_NOTIFICATION_ID,
+							notification);
+					mNotifications.add(DEFAULT_NOTIFICATION_ID);
+				}
+			} else {
+				if (!mNotifications.isEmpty()) {
+					hideAllNotifications();
+				}
+			}
 		}
 		setShowNotification(!mNotifications.isEmpty());
 	}
@@ -247,13 +353,11 @@ public class StorageInfoApplication extends Application {
 	 *            The intend with the action.
 	 * @return True if is mounted an USB device, otherwise false.
 	 */
-	public boolean checkUsbEvent(Context context, Intent intent) {
+	public boolean checkUsbEvent(Context context, Intent intent, String dataPath) {
 		boolean result = false;
 		if (intent != null) {
 			String action = intent.getAction();
 			String dataString = String.valueOf(intent.getDataString());
-			String dataPath = intent.getData() != null ? intent.getData()
-					.getPath() : "";
 			showDebuggingMessage(context, action);
 			if ("android.intent.action.MEDIA_MOUNTED".contains(action)) {
 				if (isUsbDeviceConnected(context)
@@ -321,19 +425,55 @@ public class StorageInfoApplication extends Application {
 	}
 
 	/**
+	 * Get notification type.
+	 * 
+	 * @return Notification type: 0 - disabled; 1 - create shortcut to Storage
+	 *         Settings; 2 - create a quick access shortcut.
+	 */
+	public int getNotificationType() {
+		int type = NOTIFICATION_TYPE_DISABLED;
+		if (isEnableNotifications()) {
+			type = getIntPreference(NOTIFICATION_TYPE,
+					NOTIFICATION_TYPE_DISABLED);
+		}
+		return type;
+	}
+
+	/**
+     * Retrieve an int value from the preferences.
+     * 
+     * @param key The name of the preference to retrieve.
+     * @param defValue Value to return if this preference does not exist.
+     * 
+     * @return Returns the preference value if it exists, or defValue.
+     */
+	private int getIntPreference(String key, int defValue) {
+		int value = defValue;
+		String val = mSharedPreferences.getString(key, "" + defValue);
+		try {
+			value = Integer.parseInt(val);
+		} catch (NumberFormatException e) {
+			Log.e(TAG, "NumberFormatException: " + val, e);
+		}
+		return value;
+	}
+
+	/**
 	 * Update the notifications texts.
 	 */
 	public void updateNotifications() {
 		NotificationManager notificationManager = getNotificationManager();
-		if (isEnabledQuickStorageAccess() && notificationManager != null) {
+		if (notificationManager != null) {
 			String state;
 			int storageId;
 			List<Integer> notifList = new ArrayList<Integer>();
 			if (mMountVolumes != null) {
 				for (MountVolume mountVolume : mMountVolumes) {
-					if (mountVolume.isRemovable() && !mountVolume.isPrimary()) {
-						state = MountService.getVolumeState(getMountService(),
-								mountVolume.getPath());
+					if (!isDisabledPath(mountVolume.getPath())
+							&& mountVolume.isRemovable()
+							&& !mountVolume.isPrimary()
+							&& !mountVolume.isEmulated()) {
+						state = mountVolume.getVolumeState();
 						storageId = mountVolume.getStorageId();
 						if (Environment.MEDIA_UNMOUNTED.equals(state)) {
 							notifList.add(storageId);
@@ -423,17 +563,6 @@ public class StorageInfoApplication extends Application {
 	 */
 	public boolean isDebuggingEnabled() {
 		return mSharedPreferences.getBoolean(DEBUGGING_ENABLED, false);
-	}
-
-	/**
-	 * Check if is enabled quick storage access to quick mount or unmount the
-	 * USB storage.
-	 * 
-	 * @return True if the quick storage access is enabled.
-	 */
-	public boolean isEnabledQuickStorageAccess() {
-		return mSharedPreferences
-				.getBoolean(ENABLE_QUICK_STORAGE_ACCESS, false);
 	}
 
 	/**

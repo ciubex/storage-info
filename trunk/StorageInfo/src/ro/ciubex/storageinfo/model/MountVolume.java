@@ -35,6 +35,8 @@ public class MountVolume {
 	private File mPath;
 	private boolean mRemovable;
 	private boolean mPrimary;
+	private boolean mEmulated;
+	private String mVolumeState;
 
 	/**
 	 * Returns the MTP storage ID for the volume.
@@ -135,6 +137,35 @@ public class MountVolume {
 		this.mPrimary = primary;
 	}
 
+	/**
+	 * @return the emulated
+	 */
+	public boolean isEmulated() {
+		return mEmulated;
+	}
+
+	/**
+	 * @param emulated
+	 *            the emulated to set
+	 */
+	public void setEmulated(boolean emulated) {
+		this.mEmulated = emulated;
+	}
+
+	/**
+	 * @return the volumeState
+	 */
+	public String getVolumeState() {
+		return mVolumeState;
+	}
+
+	/**
+	 * @param volumeState the volumeState to set
+	 */
+	public void setVolumeState(String volumeState) {
+		this.mVolumeState = volumeState;
+	}
+
 	@Override
 	public String toString() {
 		final StringBuilder builder = new StringBuilder("MountVolume [");
@@ -142,7 +173,7 @@ public class MountVolume {
 				.append(", mDescriptionId=").append(mDescriptionId)
 				.append(", mPath=").append(mPath).append(", mRemovable=")
 				.append(mRemovable).append(", mPrimary=").append(mPrimary)
-				.append("]");
+				.append(", mEmulated=").append(mEmulated).append("]");
 		return builder.toString();
 	}
 

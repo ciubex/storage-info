@@ -56,6 +56,7 @@ public class Utils {
 	private static Method METHOD_StorageVolume_getPath;
 	private static Method METHOD_StorageVolume_isRemovable;
 	private static Method METHOD_StorageVolume_isPrimary;
+	private static Method METHOD_StorageVolume_isEmulated;
 
 	static {
 		try {
@@ -105,6 +106,8 @@ public class Utils {
 					METHOD_StorageVolume_isRemovable = method;
 				} else if ("isPrimary".equals(methodName)) {
 					METHOD_StorageVolume_isPrimary = method;
+				} else if ("isEmulated".equals(methodName)) {
+					METHOD_StorageVolume_isEmulated = method;
 				}
 			}
 		} catch (Exception e) {
@@ -188,16 +191,16 @@ public class Utils {
 		public static List<MountVolume> getVolumeList(Object mountService) {
 			Object[] arr = (Object[]) invoke(
 					METHOD_IMountService_getVolumeList, mountService);
-			return prepareMountVolumes(arr);
+			return prepareMountVolumes(mountService, arr);
 		}
 
-		private static List<MountVolume> prepareMountVolumes(Object[] arr) {
+		private static List<MountVolume> prepareMountVolumes(Object mountService, Object[] arr) {
 			int len = arr != null ? arr.length : 0;
 			List<MountVolume> volumes = new ArrayList<MountVolume>();
 			if (len > 0) {
 				MountVolume volume;
 				for (Object obj : arr) {
-					volume = prepareMountVolume(obj);
+					volume = prepareMountVolume(mountService, obj);
 					if (volume != null && volume.isRemovable()) {
 						volumes.add(volume);
 					}
@@ -206,7 +209,7 @@ public class Utils {
 			return volumes;
 		}
 
-		private static MountVolume prepareMountVolume(Object obj) {
+		private static MountVolume prepareMountVolume(Object mountService, Object obj) {
 			MountVolume volume = null;
 			if ("android.os.storage.StorageVolume".equals(obj.getClass()
 					.getName())) {
@@ -226,6 +229,10 @@ public class Utils {
 						volume.setPrimary((Boolean) invoke(
 								METHOD_StorageVolume_isPrimary, obj));
 					}
+					if (METHOD_StorageVolume_isEmulated != null) {
+						volume.setEmulated((Boolean) invoke(
+								METHOD_StorageVolume_isEmulated, obj));
+					}
 					volume.setRemovable((Boolean) invoke(
 							METHOD_StorageVolume_isRemovable, obj));
 					if (METHOD_StorageVolume_getDescriptionId != null) {
@@ -234,6 +241,9 @@ public class Utils {
 					} else if (METHOD_StorageVolume_getDescription != null) {
 						volume.setDescription((String) invoke(
 								METHOD_StorageVolume_getDescription, obj));
+					}
+					if (METHOD_IMountService_getVolumeState != null) {
+						volume.setVolumeState(getVolumeState(mountService, volume.getPath()));
 					}
 				} catch (Exception e) {
 					Log.e(TAG, e.getMessage(), e);
@@ -271,5 +281,47 @@ public class Utils {
 			}
 		}
 		return fileManager;
+	}
+
+	/**
+	 * Join a list of string using a delimiter.
+	 * 
+	 * @param list
+	 *            List of strings.
+	 * @param delimiter
+	 *            The elements delimiter.
+	 * @return The joined list of strings.
+	 */
+	public static String join(List<String> list, String delimiter) {
+		StringBuilder result = new StringBuilder();
+		String delim = "";
+		if (!list.isEmpty()) {
+			for (String item : list) {
+				result.append(delim).append(item);
+				delim = delimiter;
+			}
+		}
+		return result.toString();
+	}
+
+	/**
+	 * Join a list of string using a delimiter.
+	 * 
+	 * @param array
+	 *            List of strings.
+	 * @param delimiter
+	 *            The elements delimiter.
+	 * @return The joined list of strings.
+	 */
+	public static String join(String[] array, String delimiter) {
+		StringBuilder result = new StringBuilder();
+		String delim = "";
+		if (array != null && array.length > 0) {
+			for (String item : array) {
+				result.append(delim).append(item);
+				delim = delimiter;
+			}
+		}
+		return result.toString();
 	}
 }
