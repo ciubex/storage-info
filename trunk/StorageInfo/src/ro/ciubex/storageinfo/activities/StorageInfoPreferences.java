@@ -182,7 +182,8 @@ public class StorageInfoPreferences extends PreferenceActivity implements
 			mDisabledPaths.setSummary(R.string.disabled_paths_desc);
 		}
 		int type = mApplication.getNotificationType();
-		if (type > StorageInfoApplication.NOTIFICATION_TYPE_DISABLED) {
+		if (type == StorageInfoApplication.NOTIFICATION_TYPE_STORAGE
+				|| type == StorageInfoApplication.NOTIFICATION_TYPE_QUICK) {
 			arr = getResources()
 					.getStringArray(R.array.notification_type_array);
 			mNotificationType.setSummary(arr[type]);
@@ -228,12 +229,12 @@ public class StorageInfoPreferences extends PreferenceActivity implements
 			if (mApplication.isShowNotification()) {
 				mApplication.hideAllNotifications();
 			} else {
-				mApplication.updateMountVolumes();
+				mApplication.updateMountedVolumes();
 				int type = mApplication.getNotificationType();
 				if (StorageInfoApplication.NOTIFICATION_TYPE_QUICK == type) {
-					mApplication.updateNotifications();
+					mApplication.updateQuickNotifications();
 				} else if (StorageInfoApplication.NOTIFICATION_TYPE_STORAGE == type) {
-					mApplication.showDefaultNotification();
+					mApplication.updateDefaultNotification();
 				}
 			}
 		}

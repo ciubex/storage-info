@@ -17,7 +17,7 @@
             android:title="@string/enable_notifications" />
 
         <ListPreference
-            android:defaultValue="-1"
+            android:defaultValue="0"
             android:dependency="enableNotifications"
             android:entries="@array/notification_type_array"
             android:entryValues="@array/notification_type_values"
