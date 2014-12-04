@@ -50,12 +50,12 @@ public class UsbBroadcastReceiver extends BroadcastReceiver {
 				String dataPath = intent.getData() != null ? intent.getData()
 						.getPath() : "";
 				if (!parentApplication.isDisabledPath(dataPath)) {
-					parentApplication.updateMountVolumes();
+					parentApplication.updateMountedVolumes();
 					int type = parentApplication.getNotificationType();
 					if (StorageInfoApplication.NOTIFICATION_TYPE_QUICK == type) {
-						parentApplication.updateNotifications();
+						parentApplication.updateQuickNotifications();
 					} else if (StorageInfoApplication.NOTIFICATION_TYPE_STORAGE == type) {
-						parentApplication.showDefaultNotification();
+						parentApplication.updateDefaultNotification();
 					}
 				}
 			}

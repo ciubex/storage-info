@@ -83,7 +83,6 @@ public class StorageInfoApplication extends Application {
 	private List<AppInfo> mApplicationsList;
 	private ProgressDialog mProgressDialog;
 
-	public static final int NOTIFICATION_TYPE_DISABLED = -1;
 	public static final int NOTIFICATION_TYPE_STORAGE = 0;
 	public static final int NOTIFICATION_TYPE_QUICK = 1;
 
@@ -100,13 +99,13 @@ public class StorageInfoApplication extends Application {
 				.getDefaultSharedPreferences(this);
 		mNotifications = new ArrayList<Integer>();
 		mMountVolumesPaths = new ArrayList<String>();
-		updateMountVolumes();
+		updateMountedVolumes();
 	}
 
 	/**
-	 * Update storage volumes.
+	 * Update mounted volumes.
 	 */
-	public void updateMountVolumes() {
+	public void updateMountedVolumes() {
 		mMountVolumes = MountService.getVolumeList(getMountService());
 		if (!mMountVolumesPaths.isEmpty()) {
 			mMountVolumesPaths.clear();
@@ -286,7 +285,7 @@ public class StorageInfoApplication extends Application {
 	/**
 	 * Show the notification on the navigation bar.
 	 */
-	public void showDefaultNotification() {
+	public void updateDefaultNotification() {
 		NotificationManager notificationManager = getNotificationManager();
 		if (notificationManager != null) {
 			if (mVolumeMounded) {
@@ -431,10 +430,10 @@ public class StorageInfoApplication extends Application {
 	 *         Settings; 2 - create a quick access shortcut.
 	 */
 	public int getNotificationType() {
-		int type = NOTIFICATION_TYPE_DISABLED;
+		int type = NOTIFICATION_TYPE_STORAGE;
 		if (isEnableNotifications()) {
 			type = getIntPreference(NOTIFICATION_TYPE,
-					NOTIFICATION_TYPE_DISABLED);
+					NOTIFICATION_TYPE_STORAGE);
 		}
 		return type;
 	}
@@ -459,9 +458,9 @@ public class StorageInfoApplication extends Application {
 	}
 
 	/**
-	 * Update the notifications texts.
+	 * Update quick notifications.
 	 */
-	public void updateNotifications() {
+	public void updateQuickNotifications() {
 		NotificationManager notificationManager = getNotificationManager();
 		if (notificationManager != null) {
 			String state;
