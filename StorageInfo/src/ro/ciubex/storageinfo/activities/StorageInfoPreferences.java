@@ -214,8 +214,16 @@ public class StorageInfoPreferences extends PreferenceActivity implements
 	private boolean onShowStorageInfo() {
 		Intent intent = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
 		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(intent);
-		finish();
+		try {
+			startActivity(intent);
+			finish();
+		} catch (ActivityNotFoundException e) {
+			mApplication.showExceptionMessage(
+					this,
+					getString(R.string.error_storage_settings_title),
+					getString(R.string.error_storage_settings_text,
+							Settings.ACTION_INTERNAL_STORAGE_SETTINGS));
+		}
 		return true;
 	}
 

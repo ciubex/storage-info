@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import ro.ciubex.storageinfo.R;
 import ro.ciubex.storageinfo.StorageInfoApplication;
 import ro.ciubex.storageinfo.model.AppInfo;
 import ro.ciubex.storageinfo.model.AppInfoComparator;
@@ -68,7 +67,6 @@ public class ScanForApplications extends AsyncTask<Void, Void, Void> {
 		AppInfo fileManager;
 		Intent intent;
 		fileManager = new AppInfo();
-		fileManager.setIcon(app.getResources().getDrawable(R.drawable.android_robot_logo));
 		fileManager.setPackageName("null");
 		fileManager.setName("Disabled");
 		newList.add(fileManager);
