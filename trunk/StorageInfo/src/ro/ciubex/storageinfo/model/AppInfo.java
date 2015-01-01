@@ -18,7 +18,7 @@
  */
 package ro.ciubex.storageinfo.model;
 
-import android.graphics.drawable.Drawable;
+import android.content.pm.ApplicationInfo;
 
 /**
  * Application info model, used to show on the list of file managers.
@@ -27,24 +27,8 @@ import android.graphics.drawable.Drawable;
  * 
  */
 public class AppInfo {
-	private Drawable mIcon;
 	private String mName;
 	private String mPackageName;
-
-	/**
-	 * @return the icon
-	 */
-	public Drawable getIcon() {
-		return mIcon;
-	}
-
-	/**
-	 * @param icon
-	 *            the icon to set
-	 */
-	public void setIcon(Drawable icon) {
-		this.mIcon = icon;
-	}
 
 	/**
 	 * @return the name

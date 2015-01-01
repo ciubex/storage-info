@@ -272,7 +272,6 @@ public class Utils {
 				ApplicationInfo packageInfo = packageManager
 						.getApplicationInfo(packageName, 0);
 				fileManager = new AppInfo();
-				fileManager.setIcon(packageInfo.loadIcon(packageManager));
 				fileManager.setName(String.valueOf(packageManager
 						.getApplicationLabel(packageInfo)));
 				fileManager.setPackageName(packageInfo.packageName);

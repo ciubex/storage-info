@@ -22,7 +22,9 @@ import java.util.List;
 
 import ro.ciubex.storageinfo.R;
 import ro.ciubex.storageinfo.model.AppInfo;
+import ro.ciubex.storageinfo.task.AppIconLoaderAsyncTask;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,16 +39,20 @@ import android.widget.TextView;
  * 
  */
 public class ApplicationsListAdapter extends BaseAdapter {
-
+	private PackageManager mPackageManager;
 	private List<AppInfo> mApplicationsList;
 	private LayoutInflater mInflater;
+	private Drawable mDefaultIcon;
 	private String mSelectedAppInfo;
 
 	public ApplicationsListAdapter(Context context,
 			List<AppInfo> applicationsList) {
-		this.mApplicationsList = applicationsList;
+		mApplicationsList = applicationsList;
 		mInflater = (LayoutInflater) context
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		mPackageManager = context.getPackageManager();
+		mDefaultIcon = context.getResources().getDrawable(
+				R.drawable.android_robot_logo);
 	}
 
 	/*
@@ -119,7 +125,7 @@ public class ApplicationsListAdapter extends BaseAdapter {
 		if (view != null) {
 			viewHolder = (ItemViewHolder) view.getTag();
 		} else {
-			view = mInflater.inflate(R.layout.list_item, null);
+			view = mInflater.inflate(R.layout.list_item, parent, false);
 			viewHolder = new ItemViewHolder();
 			viewHolder.imageView = (ImageView) view.findViewById(R.id.imageId);
 			viewHolder.textView = (TextView) view.findViewById(R.id.textId);
@@ -130,11 +136,11 @@ public class ApplicationsListAdapter extends BaseAdapter {
 			AppInfo appInfo = getItem(position);
 			if (appInfo != null) {
 				viewHolder.textView.setText(appInfo.getName());
-				Drawable icon = appInfo.getIcon();
-				if (icon != null) {
-					int size = viewHolder.textView.getHeight();
-					icon.setBounds(0, 0, size, size);
-					viewHolder.imageView.setImageDrawable(icon);
+				int size = viewHolder.textView.getHeight();
+				if (viewHolder.imageView != null) {
+					new AppIconLoaderAsyncTask(viewHolder.imageView,
+							mPackageManager, appInfo, mDefaultIcon, size, size)
+							.execute();
 				}
 				if (mSelectedAppInfo != null
 						&& mSelectedAppInfo.equals(appInfo.getPackageName())) {

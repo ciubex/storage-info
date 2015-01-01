@@ -26,6 +26,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
 import android.app.Dialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -183,8 +184,16 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 	private void showStorageSettings() {
 		Intent intent = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
 		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(intent);
-		finish();
+		try {
+			startActivity(intent);
+			finish();
+		} catch (ActivityNotFoundException e) {
+			mApplication.showExceptionMessage(
+					this,
+					getString(R.string.error_storage_settings_title),
+					getString(R.string.error_storage_settings_text,
+							Settings.ACTION_INTERNAL_STORAGE_SETTINGS));
+		}
 	}
 
 	/**
