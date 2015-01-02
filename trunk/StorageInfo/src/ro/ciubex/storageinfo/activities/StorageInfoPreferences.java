@@ -222,7 +222,7 @@ public class StorageInfoPreferences extends PreferenceActivity implements
 					this,
 					getString(R.string.error_storage_settings_title),
 					getString(R.string.error_storage_settings_text,
-							Settings.ACTION_INTERNAL_STORAGE_SETTINGS));
+							Settings.ACTION_INTERNAL_STORAGE_SETTINGS), true);
 		}
 		return true;
 	}

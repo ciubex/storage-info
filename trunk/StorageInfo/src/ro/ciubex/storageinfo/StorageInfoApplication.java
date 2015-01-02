@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import ro.ciubex.storageinfo.activities.DialogButtonListener;
 import ro.ciubex.storageinfo.activities.StorageActivity;
@@ -52,7 +52,12 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.util.Log;
+import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 /**
@@ -439,13 +444,15 @@ public class StorageInfoApplication extends Application {
 	}
 
 	/**
-     * Retrieve an int value from the preferences.
-     * 
-     * @param key The name of the preference to retrieve.
-     * @param defValue Value to return if this preference does not exist.
-     * 
-     * @return Returns the preference value if it exists, or defValue.
-     */
+	 * Retrieve an int value from the preferences.
+	 * 
+	 * @param key
+	 *            The name of the preference to retrieve.
+	 * @param defValue
+	 *            Value to return if this preference does not exist.
+	 * 
+	 * @return Returns the preference value if it exists, or defValue.
+	 */
 	private int getIntPreference(String key, int defValue) {
 		int value = defValue;
 		String val = mSharedPreferences.getString(key, "" + defValue);
@@ -613,11 +620,42 @@ public class StorageInfoApplication extends Application {
 	 */
 	public void showExceptionMessage(final DialogButtonListener listener,
 			String title, String message) {
+		showExceptionMessage(listener, title, message, false);
+	}
+
+	/**
+	 * Display an exception dialog message.
+	 * 
+	 * @param listener
+	 *            The dialog parent listener.
+	 * @param title
+	 *            The dialog title text.
+	 * @param message
+	 *            The message to be displayed.
+	 * @param messageContainLink
+	 *            A boolean flag which mark if the text contain links.
+	 */
+	public void showExceptionMessage(final DialogButtonListener listener,
+			String title, String message, boolean messageContainLink) {
 		AlertDialog.Builder alertDialog = new AlertDialog.Builder(
 				listener.getContext());
 		alertDialog.setIcon(android.R.drawable.ic_dialog_info);
 		alertDialog.setTitle(title);
-		alertDialog.setMessage(message);
+		if (messageContainLink) {
+			ScrollView scrollView = new ScrollView(listener.getContext());
+			SpannableString spanText = new SpannableString(message);
+			Linkify.addLinks(spanText, Linkify.ALL);
+			
+			TextView textView = new TextView(listener.getContext());
+			textView.setMovementMethod(LinkMovementMethod.getInstance());
+			textView.setText(spanText);
+			
+			scrollView.setPadding(14, 2, 10, 12);
+			scrollView.addView(textView);
+			alertDialog.setView(scrollView);
+		} else {
+			alertDialog.setMessage(message);
+		}
 		alertDialog.setCancelable(false);
 		alertDialog.setPositiveButton(R.string.ok,
 				new DialogInterface.OnClickListener() {
