@@ -167,7 +167,12 @@ public class StorageInfoPreferences extends PreferenceActivity implements
 		if (!"null".equals(fileManager)) {
 			AppInfo appInfo = Utils.getFileManager(getPackageManager(),
 					fileManager);
-			text = getString(R.string.file_manager_selected, appInfo.getName());
+			if (appInfo != null) { // maybe was uninstalled
+				text = getString(R.string.file_manager_selected,
+						appInfo.getName());
+			} else {
+				mApplication.setFileManager("null");
+			}
 		}
 		String[] arr = mApplication.getMountVolumesPathsArray();
 		if (arr.length > 0) {
