@@ -726,7 +726,11 @@ public class StorageInfoApplication extends Application {
 	 */
 	public void setFileManager(String fileManager) {
 		SharedPreferences.Editor editor = mSharedPreferences.edit();
-		editor.putString(FILE_MANAGER, fileManager);
+		if ("null".equals(fileManager)) {
+			editor.remove(FILE_MANAGER);
+		} else {
+			editor.putString(FILE_MANAGER, fileManager);
+		}
 		editor.commit();
 	}
 
@@ -749,6 +753,7 @@ public class StorageInfoApplication extends Application {
 						| Intent.FLAG_ACTIVITY_CLEAR_TASK);
 				startActivity(intent);
 			} catch (Exception e) {
+				setFileManager("null");
 				Log.e(TAG, "file manager: " + fileManager + " path: " + path, e);
 			}
 		}
