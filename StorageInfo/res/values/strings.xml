@@ -56,6 +56,8 @@
     <!-- Storage activity dialog -->
     <string name="quick_notification_mount">Touch to mount:</string>
     <string name="quick_notification_unmount">Touch to unmount:</string>
+    <string name="invalid_mount_title">Invalid mount state</string>
+    <string name="invalid_mount_text">Your device have an invalid state, path: \"%s\".\nPlease remove it and plug it again, if error persist, please use the application as a shortcut to default Storage from Settings and send a report to: ciubex@yahoo.com with a short description. Thank you!</string>
     <string name="confirm_mount_title">Mount storage</string>
     <string name="confirm_mount_text">Mount the storage on the path: \"%s\".</string>
     <string name="confirm_unmount_title">Unmount storage.</string>

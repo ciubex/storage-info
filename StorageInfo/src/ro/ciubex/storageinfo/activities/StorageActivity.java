@@ -48,6 +48,7 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 	private StorageInfoApplication mApplication;
 	private static final int ALERT_UNMOUNT = 0;
 	private static final int ALERT_MOUNT = 1;
+	private static final int ALERT_INVALID = 2;
 	private MountVolume mMountVolume;
 	private String mMountState;
 
@@ -117,9 +118,12 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 		if (Environment.MEDIA_MOUNTED.equals(mMountState)) {
 			setTitle(R.string.confirm_unmount_title);
 			showDialog(ALERT_UNMOUNT);
-		} else {
+		} else if (Environment.MEDIA_UNMOUNTED.equals(mMountState)) {
 			setTitle(R.string.confirm_mount_title);
 			showDialog(ALERT_MOUNT);
+		} else {
+			setTitle(R.string.invalid_mount_title);
+			showDialog(ALERT_INVALID);
 		}
 	}
 
@@ -143,6 +147,11 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 			builder = new AlertDialog.Builder(this);
 			builder.setTitle(R.string.confirm_mount_title).setMessage(
 					getString(R.string.confirm_mount_text, path));
+			break;
+		case ALERT_INVALID:
+			builder = new AlertDialog.Builder(this);
+			builder.setTitle(R.string.invalid_mount_title).setMessage(
+					getString(R.string.invalid_mount_text, path));
 			break;
 		}
 		if (builder != null) {
@@ -169,7 +178,7 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 	private void onClickOk() {
 		if (Environment.MEDIA_MOUNTED.equals(mMountState)) {
 			doUnmount();
-		} else {
+		} else if (Environment.MEDIA_UNMOUNTED.equals(mMountState)) {
 			doMount();
 		}
 	}
