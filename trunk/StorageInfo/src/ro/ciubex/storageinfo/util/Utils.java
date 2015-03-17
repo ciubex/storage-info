@@ -40,6 +40,7 @@ import android.util.Log;
 public class Utils {
 	static final String TAG = Utils.class.getName();
 	static final String SERVICE_MOUNT = "mount";
+	public static final String INVALID_STATE = "invalid_state";
 	private static Method METHOD_ServiceManager_getService;
 	private static Method METHOD_IMountService_asInterface;
 	private static Method METHOD_IMountService_getVolumeList;
@@ -149,8 +150,14 @@ public class Utils {
 
 		public static String getVolumeState(Object mountService,
 				String mountPoint) {
-			return (String) invoke(METHOD_IMountService_getVolumeState,
-					mountService, mountPoint);
+			String state = Utils.INVALID_STATE;
+			try {
+				state = (String) invoke(METHOD_IMountService_getVolumeState,
+						mountService, mountPoint);
+			} catch (Exception e) {
+				Log.e(TAG, "getVolumeState(" + mountPoint + ")", e);
+			}
+			return state;
 		}
 
 		public static int mountVolume(Object mountService, String mountPoint) {
@@ -194,7 +201,8 @@ public class Utils {
 			return prepareMountVolumes(mountService, arr);
 		}
 
-		private static List<MountVolume> prepareMountVolumes(Object mountService, Object[] arr) {
+		private static List<MountVolume> prepareMountVolumes(
+				Object mountService, Object[] arr) {
 			int len = arr != null ? arr.length : 0;
 			List<MountVolume> volumes = new ArrayList<MountVolume>();
 			if (len > 0) {
@@ -209,7 +217,8 @@ public class Utils {
 			return volumes;
 		}
 
-		private static MountVolume prepareMountVolume(Object mountService, Object obj) {
+		private static MountVolume prepareMountVolume(Object mountService,
+				Object obj) {
 			MountVolume volume = null;
 			if ("android.os.storage.StorageVolume".equals(obj.getClass()
 					.getName())) {
@@ -243,10 +252,11 @@ public class Utils {
 								METHOD_StorageVolume_getDescription, obj));
 					}
 					if (METHOD_IMountService_getVolumeState != null) {
-						volume.setVolumeState(getVolumeState(mountService, volume.getPath()));
+						volume.setVolumeState(getVolumeState(mountService,
+								volume.getPath()));
 					}
 				} catch (Exception e) {
-					Log.e(TAG, e.getMessage(), e);
+					Log.e(TAG, "Exception: " + e.getMessage() + " volume: " + volume, e);
 					throw new AndroidRuntimeException(e);
 				}
 			}
