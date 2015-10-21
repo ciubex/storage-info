@@ -32,4 +32,14 @@ android {
         debug.setRoot('build-types/debug')
         release.setRoot('build-types/release')
     }
+
+    buildTypes {
+        applicationVariants.all { variant ->
+            variant.outputs.each { output ->
+                def apk = output.outputFile;
+                def newName = "StorageInfo.apk";
+                output.outputFile = new File(apk.parentFile, newName);
+            }
+        }
+    }
 }

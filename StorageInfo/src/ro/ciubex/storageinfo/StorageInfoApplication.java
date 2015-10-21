@@ -68,6 +68,7 @@ import android.widget.Toast;
  */
 public class StorageInfoApplication extends Application {
 	private static final String TAG = StorageInfoApplication.class.getName();
+	private static Context mContext;
 	private SharedPreferences mSharedPreferences;
 	private static int mVersionCode = -1;
 	private static final String FIRST_TIME = "firstTime";
@@ -100,6 +101,7 @@ public class StorageInfoApplication extends Application {
 	public void onCreate() {
 		super.onCreate();
 		Log.d(TAG, "StorageInfoApplication started!");
+		StorageInfoApplication.mContext = getApplicationContext();
 		mSharedPreferences = PreferenceManager
 				.getDefaultSharedPreferences(this);
 		mNotifications = new ArrayList<Integer>();
@@ -111,7 +113,7 @@ public class StorageInfoApplication extends Application {
 	 * Update mounted volumes.
 	 */
 	public void updateMountedVolumes() {
-		mMountVolumes = MountService.getVolumeList(getMountService());
+		mMountVolumes = MountService.getVolumeList(getMountService(), StorageInfoApplication.mContext);
 		if (!mMountVolumesPaths.isEmpty()) {
 			mMountVolumesPaths.clear();
 		}

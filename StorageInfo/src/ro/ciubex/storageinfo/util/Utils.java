@@ -26,6 +26,8 @@ import java.util.List;
 
 import ro.ciubex.storageinfo.model.AppInfo;
 import ro.ciubex.storageinfo.model.MountVolume;
+
+import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -195,30 +197,70 @@ public class Utils {
 					METHOD_IMountService_isUsbMassStorageEnabled, mountService);
 		}
 
-		public static List<MountVolume> getVolumeList(Object mountService) {
-			Object[] arr = (Object[]) invoke(
-					METHOD_IMountService_getVolumeList, mountService);
-			return prepareMountVolumes(mountService, arr);
+		public static String getStorageVolumeDescription(Object obj, Context context) {
+			String result = null;
+			if (METHOD_StorageVolume_getDescription != null) {
+				switch (METHOD_StorageVolume_getDescription.getParameterTypes().length) {
+					case 0: result = (String) invoke(METHOD_StorageVolume_getDescription, obj);
+						break;
+					case 1: result = (String) invoke(METHOD_StorageVolume_getDescription, obj, context);
+						break;
+				}
+			}
+			return result;
 		}
 
-		private static List<MountVolume> prepareMountVolumes(
-				Object mountService, Object[] arr) {
+		public static List<MountVolume> getVolumeList(Object mountService, Context context) {
+			Object[] arr = null;
+			if (METHOD_IMountService_getVolumeList != null) {
+				switch (METHOD_IMountService_getVolumeList.getParameterTypes().length) {
+					case 0: arr = (Object[]) invoke(METHOD_IMountService_getVolumeList, mountService);
+						break;
+					case 3: arr = (Object[]) invoke(METHOD_IMountService_getVolumeList, mountService, 0, "/", 0);
+						break;
+				}
+			}
+			return prepareMountVolumes(mountService, arr, context);
+		}
+
+		private static List<MountVolume> prepareMountVolumes(Object mountService, Object[] arr, Context context) {
 			int len = arr != null ? arr.length : 0;
 			List<MountVolume> volumes = new ArrayList<MountVolume>();
 			if (len > 0) {
 				MountVolume volume;
 				for (Object obj : arr) {
-					volume = prepareMountVolume(mountService, obj);
-					if (volume != null && volume.isRemovable()) {
+					volume = prepareMountVolume(mountService, obj, context);
+					if (volume != null) {
 						volumes.add(volume);
 					}
 				}
+			} else {
+				prepareVolumeStorages(volumes);
 			}
 			return volumes;
 		}
 
+		private static void prepareVolumeStorages(List<MountVolume> volumes) {
+			String externalStorage = System.getenv("EXTERNAL_STORAGE");
+			String secondaryStorage = System.getenv("SECONDARY_STORAGE");
+			MountVolume volume;
+			if (!isEmpty(externalStorage)) {
+				volume = new MountVolume();
+				volume.setPrimary(true);
+				volume.setPathFile(new File(externalStorage));
+				volumes.add(volume);
+			}
+			if (!isEmpty(secondaryStorage)) {
+				for (String path : secondaryStorage.split(":")) {
+					volume = new MountVolume();
+					volume.setPathFile(new File(path));
+					volumes.add(volume);
+				}
+			}
+		}
+
 		private static MountVolume prepareMountVolume(Object mountService,
-				Object obj) {
+				Object obj, Context context) {
 			MountVolume volume = null;
 			if ("android.os.storage.StorageVolume".equals(obj.getClass()
 					.getName())) {
@@ -248,8 +290,7 @@ public class Utils {
 						volume.setDescriptionId((Integer) invoke(
 								METHOD_StorageVolume_getDescriptionId, obj));
 					} else if (METHOD_StorageVolume_getDescription != null) {
-						volume.setDescription((String) invoke(
-								METHOD_StorageVolume_getDescription, obj));
+						volume.setDescription(getStorageVolumeDescription(obj, context));
 					}
 					if (METHOD_IMountService_getVolumeState != null) {
 						volume.setVolumeState(getVolumeState(mountService,
@@ -332,5 +373,17 @@ public class Utils {
 			}
 		}
 		return result.toString();
+	}
+
+	/**
+	 * Returns true if the object is null or is empty.
+	 *
+	 * @param object The object to be examined.
+	 * @return True if object is null or zero length.
+	 */
+	public static boolean isEmpty(Object object) {
+		if (object instanceof CharSequence)
+			return ((CharSequence) object).length() == 0;
+		return object == null;
 	}
 }
