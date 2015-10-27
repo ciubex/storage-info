@@ -706,7 +706,11 @@ public class StorageInfoApplication extends Application {
 	 */
 	public void hideProgressDialog() {
 		if (mProgressDialog != null) {
-			mProgressDialog.dismiss();
+			try {
+				mProgressDialog.dismiss();
+			} catch (Exception e) {
+
+			}
 		}
 		mProgressDialog = null;
 	}
