@@ -30,6 +30,7 @@ import android.content.Intent;
  * 
  */
 public class UsbBroadcastReceiver extends BroadcastReceiver {
+	private static final String TAG = UsbBroadcastReceiver.class.getName();
 
 	/**
 	 * This method is called when the BroadcastReceiver is receiving an Intent
@@ -44,18 +45,19 @@ public class UsbBroadcastReceiver extends BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) {
 		Context appContext = context.getApplicationContext();
 		if (appContext instanceof StorageInfoApplication) {
-			StorageInfoApplication parentApplication = (StorageInfoApplication) appContext;
-			if (parentApplication != null
-					&& parentApplication.isEnableNotifications()) {
+			StorageInfoApplication application = (StorageInfoApplication) appContext;
+			application.logD(TAG, "onReceive: " + String.valueOf(intent));
+			if (application.isEnableNotifications()) {
 				String dataPath = intent.getData() != null ? intent.getData()
 						.getPath() : "";
-				if (!parentApplication.isDisabledPath(dataPath)) {
-					parentApplication.updateMountedVolumes();
-					int type = parentApplication.getNotificationType();
+				application.logD(TAG, "onReceive dataPath: " + dataPath);
+				if (!application.isDisabledPath(dataPath)) {
+					application.updateMountedVolumes();
+					int type = application.getNotificationType();
 					if (StorageInfoApplication.NOTIFICATION_TYPE_QUICK == type) {
-						parentApplication.updateQuickNotifications();
+						application.updateQuickNotifications();
 					} else if (StorageInfoApplication.NOTIFICATION_TYPE_STORAGE == type) {
-						parentApplication.updateDefaultNotification();
+						application.updateDefaultNotification();
 					}
 				}
 			}

@@ -168,13 +168,16 @@ public class MountVolume {
 
 	@Override
 	public String toString() {
-		final StringBuilder builder = new StringBuilder("MountVolume [");
-		builder.append("mStorageId=").append(mStorageId)
-				.append(", mDescriptionId=").append(mDescriptionId)
-				.append(", mPath=").append(mPath).append(", mRemovable=")
-				.append(mRemovable).append(", mPrimary=").append(mPrimary)
-				.append(", mEmulated=").append(mEmulated).append("]");
-		return builder.toString();
+		final StringBuilder sb = new StringBuilder("MountVolume{");
+		sb.append("mStorageId=").append(mStorageId);
+		sb.append(", mDescriptionId=").append(mDescriptionId);
+		sb.append(", mDescription='").append(mDescription).append('\'');
+		sb.append(", mPath=").append(mPath);
+		sb.append(", mRemovable=").append(mRemovable);
+		sb.append(", mPrimary=").append(mPrimary);
+		sb.append(", mEmulated=").append(mEmulated);
+		sb.append(", mVolumeState='").append(mVolumeState).append('\'');
+		sb.append('}');
+		return sb.toString();
 	}
-
 }

@@ -19,9 +19,15 @@
     <string name="show_storage_info_desc">Go to the Storage Settings</string>
     <string name="settings_title">Storage Info</string>
     <string name="settings_summary">Storage Info settings</string>
+
     <string name="general_settings">Settings</string>
+
     <string name="enable_notifications">Enable notifications</string>
     <string name="enable_notifications_desc">Enable notification when an USB storage is pluged.</string>
+
+    <string name="allow_notification_dismiss_title">Allow to dismiss notification</string>
+    <string name="allow_notification_dismiss_desc">Check this option to allow the notifications do be dismissed from the notification bar.</string>
+
     <string name="notification_type">Notification type</string>
     <string name="notification_type_desc">Chose what shortcut should be created on the notification bar when an USB storage is pluged.</string>
 
@@ -83,7 +89,8 @@
     <string name="error_unmount_text_SecurityException">Due to security restrictions cannot unmount storage with the path: \"%s\".\nPlease change the notification type to use Storage Settings to unmount storages.</string>
     <string name="error_mount_title">Mounting storage failed</string>
     <string name="error_mount_detach_text">Cannot mount storage with the path: \"%s\".\nTry to detach and attach again your device.</string>
-    <string name="error_mount_text">Cannot mount storage. Try again later.\nIf the error persist please uncheck the quick storage access.\nThe error:\n%1$s.\nThe cause:\n%2$s.</string>
+    <string name="error_mount_text">Cannot mount storage. Try again later.\nIf the error persist please change the notification type to use Storage Settings to mount storages.\nThe error:\n%1$s.\nThe cause:\n%2$s.</string>
+    <string name="error_mount_text_SecurityException">Due to security restrictions cannot mount storage with the path: \"%s\".\nPlease change the notification type to use Storage Settings to mount storages.</string>
     <string name="error_storage_settings_title">Storage Settings Not Found</string>
     <string name="error_storage_settings_text">The Android version from this device do not provide an access to default Storage Settings activity: \"%s\".\nThis is not a normal exception and is related only with the Android version from this device. Most probably is a custom ROM or the developers do not respect Google requirements: http://developer.android.com/reference/android/provider/Settings.html#ACTION_INTERNAL_STORAGE_SETTINGS</string>
 

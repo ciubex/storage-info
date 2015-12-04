@@ -83,9 +83,10 @@ public class StorageInfoApplication extends Application {
 	private static int mSdkInt = 8;
 	private static final String FIRST_TIME = "firstTime";
 	private static final String SHOW_NOTIFICATION = "showNotification";
-	private static final String ENABLE_NOTIFICATIONS = "enableNotifications";
-	private static final String NOTIFICATION_TYPE = "notificationType";
-	private static final String DISABLED_PATHS = "disabledPaths";
+	public static final String ENABLE_NOTIFICATIONS = "enableNotifications";
+	public static final String ALLOW_NOTIFICATIONS_DISMISS = "allowNotificationsDismiss";
+	public static final String NOTIFICATION_TYPE = "notificationType";
+	public static final String DISABLED_PATHS = "disabledPaths";
 	private static final String FILE_MANAGER = "fileManager";
 	private static final String HIDE_UNMOUNT_CONFIRMATION = "hideUnmountConfirmation";
 	private static final String CHECK_PRIMARY_VOLUME = "checkPrimaryVolume";
@@ -139,13 +140,14 @@ public class StorageInfoApplication extends Application {
 		}
 		mVolumeMounded = false;
 		if (!mMountVolumes.isEmpty()) {
-			String path;
+			String path, state;
 			for (MountVolume mountVolume : mMountVolumes) {
 				path = mountVolume.getPath();
+				state = mountVolume.getVolumeState();
+				logD(TAG, "updateMountedVolumes: " + mountVolume);
 				mMountVolumesPaths.add(path);
 				if (!isDisabledPath(path)
-						&& Environment.MEDIA_MOUNTED.equals(mountVolume
-								.getVolumeState())) {
+						&& Environment.MEDIA_MOUNTED.equals(state)) {
 					mVolumeMounded = true;
 				}
 			}
@@ -308,6 +310,15 @@ public class StorageInfoApplication extends Application {
 		return mSharedPreferences.getBoolean(ENABLE_NOTIFICATIONS, true);
 	}
 
+	/**
+	 * Check if the allow notification can be dismissed flag is enabled.
+	 *
+	 * @return True if the notification can be dismissed.
+	 */
+	public boolean isAllowNotificationsDismiss() {
+		return mSharedPreferences.getBoolean(ALLOW_NOTIFICATIONS_DISMISS, true);
+	}
+
 	private NotificationManager getNotificationManager() {
 		if (mNotificationManager == null) {
 			mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -321,6 +332,7 @@ public class StorageInfoApplication extends Application {
 	public void updateDefaultNotification() {
 		NotificationManager notificationManager = getNotificationManager();
 		if (notificationManager != null) {
+			logD(TAG, "updateDefaultNotification mVolumeMounded: " + mVolumeMounded);
 			if (mVolumeMounded) {
 				if (mNotifications.isEmpty()) {
 					Intent intent = new Intent(
@@ -341,7 +353,9 @@ public class StorageInfoApplication extends Application {
 					notifBuilder.setContentIntent(pIntent);
 
 					Notification notification = notifBuilder.build();
-					notification.flags |= Notification.FLAG_NO_CLEAR;
+					if (!isAllowNotificationsDismiss()) {
+						notification.flags |= Notification.FLAG_NO_CLEAR;
+					}
 					notificationManager.notify(DEFAULT_NOTIFICATION_ID,
 							notification);
 					mNotifications.add(DEFAULT_NOTIFICATION_ID);
@@ -497,17 +511,19 @@ public class StorageInfoApplication extends Application {
 	public void updateQuickNotifications() {
 		NotificationManager notificationManager = getNotificationManager();
 		if (notificationManager != null) {
-			String state;
+			String path, state;
 			int storageId;
 			List<Integer> notifList = new ArrayList<Integer>();
 			if (mMountVolumes != null) {
 				for (MountVolume mountVolume : mMountVolumes) {
-					if (!isDisabledPath(mountVolume.getPath())
+					path = mountVolume.getPath();
+					if (!isDisabledPath(path)
 							&& mountVolume.isRemovable()
 							&& (isPrimaryVolumeChecked() || mountVolume.isPrimary())
 							&& (isEmulatedVolumeChecked() || mountVolume.isEmulated())) {
 						state = mountVolume.getVolumeState();
 						storageId = mountVolume.getStorageId();
+						logD(TAG, "updateQuickNotifications: " + mountVolume);
 						if (Environment.MEDIA_UNMOUNTED.equals(state)) {
 							notifList.add(storageId);
 							updateNotification(notificationManager,
@@ -557,7 +573,9 @@ public class StorageInfoApplication extends Application {
 		notifBuilder.setContentText(text);
 
 		Notification notification = notifBuilder.build();
-		notification.flags |= Notification.FLAG_NO_CLEAR;
+		if (!isAllowNotificationsDismiss()) {
+			notification.flags |= Notification.FLAG_NO_CLEAR;
+		}
 		notificationManager.notify(storageId, notification);
 	}
 

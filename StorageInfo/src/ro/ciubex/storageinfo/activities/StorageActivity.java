@@ -219,7 +219,7 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 				finish();
 			} catch (Exception e) {
 				mApplication.logE(TAG, e.getMessage(), e);
-				handleUnmoundException(e, path);
+				handleUnmountException(e, path);
 			}
 		}
 	}
@@ -229,7 +229,7 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 	 * @param e The encountered exception.
 	 * @param path The path for which was encountered the exception.
 	 */
-	private void handleUnmoundException(Exception e, String path) {
+	private void handleUnmountException(Exception e, String path) {
 		if (e.getCause() instanceof SecurityException ||
 				(e.getCause() != null && e.getCause().getCause() instanceof SecurityException)) {
 			mApplication.showExceptionMessage(
@@ -264,13 +264,30 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 				}
 			} catch (Exception e) {
 				mApplication.logE(TAG, e.getMessage(), e);
-				mApplication.showExceptionMessage(
-						this,
-						getString(R.string.error_mount_title),
-						getString(R.string.error_mount_text, e.getMessage(), (e
-								.getCause() != null) ? e.getCause().getCause()
-								: "null"));
+				handleMountException(e, path);
 			}
+		}
+	}
+
+	/**
+	 * Handle the mount exceptions cases.
+	 * @param e The encountered exception.
+	 * @param path The path for which was encountered the exception.
+	 */
+	private void handleMountException(Exception e, String path) {
+		if (e.getCause() instanceof SecurityException ||
+				(e.getCause() != null && e.getCause().getCause() instanceof SecurityException)) {
+			mApplication.showExceptionMessage(
+					this,
+					getString(R.string.error_mount_title),
+					getString(R.string.error_mount_text_SecurityException, path));
+		} else {
+			mApplication.showExceptionMessage(
+					this,
+					getString(R.string.error_mount_title),
+					getString(R.string.error_mount_text, path, e
+							.getMessage(), (e.getCause() != null) ? e
+							.getCause().getCause() : "null"));
 		}
 	}
 

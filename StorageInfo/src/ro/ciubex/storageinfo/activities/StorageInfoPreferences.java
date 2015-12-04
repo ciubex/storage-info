@@ -305,6 +305,8 @@ public class StorageInfoPreferences extends PreferenceActivity implements
 					mApplication.updateDefaultNotification();
 				}
 			}
+		} else if (mApplication.isShowNotification()) {
+			mApplication.hideAllNotifications();
 		}
 		return true;
 	}
@@ -530,9 +532,13 @@ public class StorageInfoPreferences extends PreferenceActivity implements
 	@Override
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
 			String key) {
-		if ("disabledPaths".equals(key)) {
+		if (StorageInfoApplication.DISABLED_PATHS.equals(key)) {
 			mApplication.updateDisabledPaths();
-		} if ("notificationType".equals(key)) {
+		} else if (StorageInfoApplication.ENABLE_NOTIFICATIONS.equals(key)) {
+			onToggleNotification(true);
+		} else if (StorageInfoApplication.NOTIFICATION_TYPE.equals(key)) {
+			onToggleNotification(true);
+		} else if (StorageInfoApplication.ALLOW_NOTIFICATIONS_DISMISS.equals(key)) {
 			onToggleNotification(true);
 		}
 		prepareTexts();

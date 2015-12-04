@@ -16,6 +16,13 @@
             android:summary="@string/enable_notifications_desc"
             android:title="@string/enable_notifications"/>
 
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:dependency="enableNotifications"
+            android:key="allowNotificationsDismiss"
+            android:summary="@string/allow_notification_dismiss_desc"
+            android:title="@string/allow_notification_dismiss_title"/>
+
         <ListPreference
             android:defaultValue="0"
             android:dependency="enableNotifications"
