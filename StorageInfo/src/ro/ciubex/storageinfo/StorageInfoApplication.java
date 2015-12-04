@@ -19,17 +19,25 @@
 package ro.ciubex.storageinfo;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.Writer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TimeZone;
 
 import ro.ciubex.storageinfo.activities.DialogButtonListener;
 import ro.ciubex.storageinfo.activities.StorageActivity;
 import ro.ciubex.storageinfo.model.AppInfo;
 import ro.ciubex.storageinfo.model.MountVolume;
+import ro.ciubex.storageinfo.task.LogThread;
 import ro.ciubex.storageinfo.util.Utils.MountService;
 import android.app.AlertDialog;
 import android.app.Application;
@@ -71,13 +79,17 @@ public class StorageInfoApplication extends Application {
 	private static Context mContext;
 	private SharedPreferences mSharedPreferences;
 	private static int mVersionCode = -1;
+	private static String mVersionName = null;
+	private static int mSdkInt = 8;
 	private static final String FIRST_TIME = "firstTime";
 	private static final String SHOW_NOTIFICATION = "showNotification";
 	private static final String ENABLE_NOTIFICATIONS = "enableNotifications";
 	private static final String NOTIFICATION_TYPE = "notificationType";
 	private static final String DISABLED_PATHS = "disabledPaths";
-	private static final String DEBUGGING_ENABLED = "debuggingEnabled";
 	private static final String FILE_MANAGER = "fileManager";
+	private static final String HIDE_UNMOUNT_CONFIRMATION = "hideUnmountConfirmation";
+	private static final String CHECK_PRIMARY_VOLUME = "checkPrimaryVolume";
+	private static final String CHECK_EMULATED_VOLUME = "checkEmulatedVolume";
 	private NotificationManager mNotificationManager;
 	private Object mMountService;
 	private List<MountVolume> mMountVolumes;
@@ -88,6 +100,13 @@ public class StorageInfoApplication extends Application {
 	private static final int DEFAULT_NOTIFICATION_ID = 0;
 	private List<AppInfo> mApplicationsList;
 	private ProgressDialog mProgressDialog;
+
+	private File mLogsFolder;
+	public static final String LOGS_FOLDER_NAME = "logs";
+	public static final String LOG_FILE_NAME = "StorageInfo_logs.log";
+	private static File logFile;
+	private static LogThread logFileThread;
+	private static SimpleDateFormat sFormatter;
 
 	public static final int NOTIFICATION_TYPE_STORAGE = 0;
 	public static final int NOTIFICATION_TYPE_QUICK = 1;
@@ -100,7 +119,8 @@ public class StorageInfoApplication extends Application {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		Log.d(TAG, "StorageInfoApplication started!");
+		mSdkInt = android.os.Build.VERSION.SDK_INT;
+		logD(TAG, "StorageInfoApplication started!");
 		StorageInfoApplication.mContext = getApplicationContext();
 		mSharedPreferences = PreferenceManager
 				.getDefaultSharedPreferences(this);
@@ -130,25 +150,6 @@ public class StorageInfoApplication extends Application {
 				}
 			}
 		}
-	}
-
-	/**
-	 * Check if currently are volume mounted. Only available volumes are
-	 * counting.
-	 * 
-	 * @return True if the volume are mounted.
-	 */
-	public boolean haveVolumeMounded() {
-		return mVolumeMounded;
-	}
-
-	/**
-	 * Get the mount volumes paths list.
-	 * 
-	 * @return Mount volumes paths list.
-	 */
-	public List<String> getMountVolumesPaths() {
-		return mMountVolumesPaths;
 	}
 
 	/**
@@ -216,7 +217,7 @@ public class StorageInfoApplication extends Application {
 	 * @return True if is the first time when the application is launched.
 	 */
 	public boolean isFirstTime() {
-		String key = FIRST_TIME + getVersion();
+		String key = FIRST_TIME;// + getVersion();
 		boolean result = mSharedPreferences.getBoolean(key, true);
 		if (result) {
 			saveBooleanSharedPreference(key, false);
@@ -257,6 +258,31 @@ public class StorageInfoApplication extends Application {
 	 */
 	public void setShowNotification(boolean flag) {
 		saveBooleanSharedPreference(SHOW_NOTIFICATION, flag);
+	}
+
+	/**
+	 * Check if the confirmation dialog for unmount or mount should be hidden.
+	 *
+	 * @return True if the confirmation dialog should be hidden.
+	 */
+	public boolean hideUnmountConfirmation() {
+		return mSharedPreferences.getBoolean(HIDE_UNMOUNT_CONFIRMATION, false);
+	}
+
+	/**
+	 * Check if the primary volume is checked.
+	 * @return True if the option is checked.
+	 */
+	public boolean isPrimaryVolumeChecked() {
+		return mSharedPreferences.getBoolean(CHECK_PRIMARY_VOLUME, true);
+	}
+
+	/**
+	 * Check if the emulated volume is checked.
+	 * @return True if the option is checked.
+	 */
+	public boolean isEmulatedVolumeChecked() {
+		return mSharedPreferences.getBoolean(CHECK_EMULATED_VOLUME, true);
 	}
 
 	/**
@@ -364,7 +390,6 @@ public class StorageInfoApplication extends Application {
 		if (intent != null) {
 			String action = intent.getAction();
 			String dataString = String.valueOf(intent.getDataString());
-			showDebuggingMessage(context, action);
 			if ("android.intent.action.MEDIA_MOUNTED".contains(action)) {
 				if (isUsbDeviceConnected(context)
 						&& dataString.startsWith("file:")) {
@@ -461,7 +486,7 @@ public class StorageInfoApplication extends Application {
 		try {
 			value = Integer.parseInt(val);
 		} catch (NumberFormatException e) {
-			Log.e(TAG, "NumberFormatException: " + val, e);
+			logE(TAG, "NumberFormatException: " + val, e);
 		}
 		return value;
 	}
@@ -479,8 +504,8 @@ public class StorageInfoApplication extends Application {
 				for (MountVolume mountVolume : mMountVolumes) {
 					if (!isDisabledPath(mountVolume.getPath())
 							&& mountVolume.isRemovable()
-							&& !mountVolume.isPrimary()
-							&& !mountVolume.isEmulated()) {
+							&& (isPrimaryVolumeChecked() || mountVolume.isPrimary())
+							&& (isEmulatedVolumeChecked() || mountVolume.isEmulated())) {
 						state = mountVolume.getVolumeState();
 						storageId = mountVolume.getStorageId();
 						if (Environment.MEDIA_UNMOUNTED.equals(state)) {
@@ -562,28 +587,6 @@ public class StorageInfoApplication extends Application {
 			}
 		}
 		return false;
-	}
-
-	/**
-	 * Check if is enabled debugging support.
-	 * 
-	 * @return True if debugging is enabled.
-	 */
-	public boolean isDebuggingEnabled() {
-		return mSharedPreferences.getBoolean(DEBUGGING_ENABLED, false);
-	}
-
-	/**
-	 * Show a debugging message on the screen.
-	 * 
-	 * @param message
-	 *            Message to be show on the screen.
-	 */
-	public void showDebuggingMessage(Context context, String message) {
-		if (isDebuggingEnabled()) {
-			showToastMessage(context,
-					getString(R.string.debug_message, "" + message));
-		}
 	}
 
 	/**
@@ -760,7 +763,7 @@ public class StorageInfoApplication extends Application {
 				startActivity(intent);
 			} catch (Exception e) {
 				setFileManager("null");
-				Log.e(TAG, "file manager: " + fileManager + " path: " + path, e);
+				logE(TAG, "file manager: " + fileManager + " path: " + path, e);
 			}
 		}
 	}
@@ -776,10 +779,181 @@ public class StorageInfoApplication extends Application {
 		try {
 			success = (PackageManager.SIGNATURE_MATCH == pm.checkSignatures(
 					this.getPackageName(), "ro.ciubex.storageinfopro"));
-			Log.d(TAG, "isProPresent: " + success);
+			logD(TAG, "isProPresent: " + success);
 		} catch (Exception e) {
-			Log.e(TAG, "isProPresent: " + e.getMessage(), e);
+			logE(TAG, "isProPresent: " + e.getMessage(), e);
 		}
 		return success;
+	}
+
+	/**
+	 * Get logs folder. If is not defined then is initialized and created.
+	 *
+	 * @return Logs folder.
+	 */
+	public File getLogsFolder() {
+		if (mLogsFolder == null) {
+			mLogsFolder = new File(getCacheDir() + File.separator + StorageInfoApplication.LOGS_FOLDER_NAME);
+			if (!mLogsFolder.exists()) {
+				mLogsFolder.mkdirs();
+			}
+		}
+		return mLogsFolder;
+	}
+
+
+	/**
+	 * Send a {@link #ERROR} log message and log the exception.
+	 *
+	 * @param tag Used to identify the source of a log message. It usually
+	 *            identifies the class or activity where the log call occurs.
+	 * @param msg The message you would like logged.
+	 */
+	public void logE(String tag, String msg) {
+		Log.e(tag, msg);
+		writeLogFile(System.currentTimeMillis(), "ERROR\t" + tag + "\t" + msg);
+	}
+
+	/**
+	 * Send a {@link #ERROR} log message and log the exception.
+	 *
+	 * @param tag Used to identify the source of a log message. It usually
+	 *            identifies the class or activity where the log call occurs.
+	 * @param msg The message you would like logged.
+	 * @param tr  An exception to log
+	 */
+	public void logE(String tag, String msg, Throwable tr) {
+		Log.e(tag, msg, tr);
+		writeLogFile(System.currentTimeMillis(), "ERROR\t" + tag + "\t" + msg
+				+ "\t" + Log.getStackTraceString(tr));
+	}
+
+	/**
+	 * Send a {@link #DEBUG} log message.
+	 *
+	 * @param tag Used to identify the source of a log message. It usually
+	 *            identifies the class or activity where the log call occurs.
+	 * @param msg The message you would like logged.
+	 */
+	public void logD(String tag, String msg) {
+		Log.d(tag, msg);
+		writeLogFile(System.currentTimeMillis(), "DEBUG\t" + tag + "\t" + msg);
+	}
+
+	/**
+	 * Write the log message to the app log file.
+	 *
+	 * @param logmessage The log message.
+	 */
+	private void writeLogFile(long milliseconds, String logmessage) {
+		if (checkLogFileThread()) {
+			logFileThread.addLog(sFormatter.format(new Date(milliseconds))
+					+ "\t" + logmessage);
+		}
+	}
+
+	/**
+	 * Check if log file thread exist and create it if not.
+	 */
+	private boolean checkLogFileThread() {
+		if (logFileThread == null) {
+			try {
+				logFile = new File(getLogsFolder(), StorageInfoApplication.LOG_FILE_NAME);
+				logFileThread = new LogThread(logFile);
+				sFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.ENGLISH);
+				sFormatter.setTimeZone(TimeZone.getDefault());
+				new Thread(logFileThread).start();
+			} catch (Exception e) {
+				logE(TAG, "Exception: " + e.getMessage(), e);
+			}
+		}
+		return logFileThread != null;
+	}
+
+	/**
+	 * Obtain the log file.
+	 *
+	 * @return The log file.
+	 */
+	public File getLogFile() {
+		return logFile;
+	}
+
+	/**
+	 * Remove log file from disk.
+	 */
+	public void deleteLogFile() {
+		if (logFile != null && logFile.exists()) {
+			try {
+				logFileThread.close();
+				while (!logFileThread.isClosed()) {
+					Thread.sleep(1000);
+				}
+			} catch (IOException e) {
+				Log.e(TAG, "deleteLogFile: " + e.getMessage(), e);
+			} catch (InterruptedException e) {
+				Log.e(TAG, "deleteLogFile: " + e.getMessage(), e);
+			}
+			logFileThread = null;
+			logFile.delete();
+		}
+	}
+
+	/**
+	 * Write the shared preferences to provided writer.
+	 * @param writer The writer used to write the shared preferences.
+	 */
+	public void writeSharedPreferences(Writer writer) {
+		Map<String, ?> allEntries = mSharedPreferences.getAll();
+		try {
+			for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+				writer.write(entry.getKey());
+				writer.write(": \"");
+				writer.write(String.valueOf(entry.getValue()));
+				writer.write("\"");
+				writer.write('\n');
+			}
+		} catch (IOException e) {
+			logE(TAG, "writeSharedPreferences: " + e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * The user-visible SDK version of the framework.
+	 *
+	 * @return The user-visible SDK version of the framework
+	 */
+	public int getSdkInt() {
+		return mSdkInt;
+	}
+
+	/**
+	 * Retrieve the application version code.
+	 *
+	 * @return The application version code.
+	 */
+	public int getVersionCode() {
+		if (mVersionCode == -1) {
+			try {
+				mVersionCode = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+			} catch (NameNotFoundException e) {
+			}
+		}
+		return mVersionCode;
+	}
+
+	/**
+	 * Retrieve the application version name.
+	 *
+	 * @return The application version name.
+	 */
+	public String getVersionName() {
+		if (mVersionName == null) {
+			try {
+				mVersionName = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+			} catch (NameNotFoundException e) {
+			}
+		}
+		return mVersionName;
 	}
 }

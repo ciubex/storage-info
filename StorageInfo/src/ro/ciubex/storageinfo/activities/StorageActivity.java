@@ -33,7 +33,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.Window;
 
 /**
@@ -83,9 +82,7 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 			if (storageId != -1) {
 				mMountVolume = mApplication.getMountVolume(storageId);
 				if (mMountVolume != null) {
-					mMountState = MountService.getVolumeState(
-							mApplication.getMountService(),
-							mMountVolume.getPath());
+					mMountState = mMountVolume.getVolumeState();
 				}
 			}
 		}
@@ -115,15 +112,21 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 	 * Prepare texts for this activity.
 	 */
 	private void prepareActivityText() {
+		int alertId = ALERT_INVALID;
 		if (Environment.MEDIA_MOUNTED.equals(mMountState)) {
 			setTitle(R.string.confirm_unmount_title);
-			showDialog(ALERT_UNMOUNT);
+			alertId = ALERT_UNMOUNT;
 		} else if (Environment.MEDIA_UNMOUNTED.equals(mMountState)) {
 			setTitle(R.string.confirm_mount_title);
-			showDialog(ALERT_MOUNT);
+			alertId = ALERT_MOUNT;
 		} else {
 			setTitle(R.string.invalid_mount_title);
 			showDialog(ALERT_INVALID);
+		}
+		if (mApplication.hideUnmountConfirmation() && alertId != ALERT_INVALID) {
+			onClickOk();
+		} else {
+			showDialog(alertId);
 		}
 	}
 
@@ -212,18 +215,34 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 		if (mMountVolume != null) {
 			String path = mMountVolume.getPath();
 			try {
-				MountService.unmountVolume(mApplication.getMountService(),
-						path, true);
+				MountService.unmountVolume(mApplication.getMountService(), path, true);
 				finish();
 			} catch (Exception e) {
-				Log.e(TAG, e.getMessage(), e);
-				mApplication.showExceptionMessage(
-						this,
-						getString(R.string.error_unmount_title),
-						getString(R.string.error_unmount_text, path, e
-								.getMessage(), (e.getCause() != null) ? e
-								.getCause().getCause() : "null"));
+				mApplication.logE(TAG, e.getMessage(), e);
+				handleUnmoundException(e, path);
 			}
+		}
+	}
+
+	/**
+	 * Handle the unmount exceptions cases.
+	 * @param e The encountered exception.
+	 * @param path The path for which was encountered the exception.
+	 */
+	private void handleUnmoundException(Exception e, String path) {
+		if (e.getCause() instanceof SecurityException ||
+				(e.getCause() != null && e.getCause().getCause() instanceof SecurityException)) {
+			mApplication.showExceptionMessage(
+					this,
+					getString(R.string.error_unmount_title),
+					getString(R.string.error_unmount_text_SecurityException, path));
+		} else {
+			mApplication.showExceptionMessage(
+					this,
+					getString(R.string.error_unmount_title),
+					getString(R.string.error_unmount_text, path, e
+							.getMessage(), (e.getCause() != null) ? e
+							.getCause().getCause() : "null"));
 		}
 	}
 
@@ -244,7 +263,7 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 					finish();
 				}
 			} catch (Exception e) {
-				Log.e(TAG, e.getMessage(), e);
+				mApplication.logE(TAG, e.getMessage(), e);
 				mApplication.showExceptionMessage(
 						this,
 						getString(R.string.error_mount_title),

@@ -7,6 +7,7 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="settings">Settings</string>
+    <string name="first_time_message">Attention: this application was made for Sony Xperia V (LT25i) with Android 4.0.4 only, I cannot guarantee that will work on your device due to Android and hardware differences.\nThank you for your consideration!</string>
 
     <!-- Notifications -->
     <string name="notification_title">Storage Info</string>
@@ -33,6 +34,15 @@
         <item>1</item>
     </string-array>
 
+    <string name="hide_unmount_confirmation_title">Do not show the confirmation dialog for quick mount/unmount cases.</string>
+    <string name="hide_unmount_confirmation_desc">This option is available only when the notification type is set to second option which should allow the quick mount or unmount actions to be made directly from the applications.</string>
+
+    <string name="check_primary_volume_title">Primary storage volume check</string>
+    <string name="check_primary_volume_desc">Check this to allow to mount or unmount primary storage volumes too.</string>
+
+    <string name="check_emulated_volume_title">Emulated storage volume check</string>
+    <string name="check_emulated_volume_desc">Check this to allow to mount or unmount emulated storage volumes too.</string>
+
     <string name="disabled_paths">Disabled paths</string>
     <string name="disabled_paths_desc">Choose what paths should not be (un)mount.</string>
     <string name="disabled_paths_desc_paths">Do not (un)mount: %s</string>
@@ -41,15 +51,20 @@
     <string name="file_manager_desc">Select a file manager to be launched when a storage is mounted.</string>
     <string name="file_manager_selected">Selected file manager: %s</string>
     <string name="toggle_notification">Toggle notification</string>
-    <string name="toggle_notification_desc">Use this to show or hide the notification shortcuts.</string>
-    <string name="enable_debugging">Enable debugging.</string>
-    <string name="enable_debugging_desc">By checking this you will enable debugging support. You will see some toast messages on the screen with device events. In format: Storage Info: android.intent&#8230;</string>
+    <string name="toggle_notification_desc">This option is actually a workaround which can be used to correct the notification bar messages, also check for primary and emulated volumes options.</string>
     <string name="debug_message">Storage Info: %s</string>
     <string name="icon_nothing">[]</string>
     <string name="please_wait">Please wait&#8230;</string>
     <string name="scan_for_applications">Scan for applications&#8230;</string>
     <string name="no_application">No application available!</string>
     <string name="no_activity_exception">Seems you have a customized Android version:\n%s</string>
+
+    <string name="send_debug_title">Send debugging logs</string>
+    <string name="send_debug_desc">Send an e-mail with debugging files</string>
+    <string name="send_debug_confirmation">Do you want to send a debugging report?\nYour default e-mail application will send an e-mail with two files attached, please fill a short description of your issues if is necessary.\nThank you!</string>
+    <string name="send_debug_email_title">Debugging logs for Storage Info</string>
+    <string name="report_body">Description: </string>
+    <string name="send_report">Send report&#8230;</string>
 
     <string-array name="empty_array" />
 
@@ -63,8 +78,9 @@
     <string name="confirm_unmount_title">Unmount storage.</string>
     <string name="confirm_unmount_text">Path: \"%s\"\nIf you unmount the USB storage, some applications that you are using will stop and may be unavailable until you remount the storage.</string>
     <string name="error_unmount_title">Unmounting storage failed</string>
-    <string name="error_unmount_text_no_error">Cannot unmount USB storage with the path: \"%s\".\nTry again later.\nIf the error persist please uncheck the quick storage access.</string>
-    <string name="error_unmount_text">Cannot unmount storage with the path: \"%1$s\".\nTry again later.\nIf the error persist please uncheck the quick storage access.\nThe error:\n%2$s.\nThe cause:\n%3$s.</string>
+    <string name="error_unmount_text_no_error">Cannot unmount USB storage with the path: \"%s\".\nTry again later.\nIf the error persist please change the notification type to use Storage Settings to unmount storages.</string>
+    <string name="error_unmount_text">Cannot unmount storage with the path: \"%1$s\".\nTry again later.\nIf the error persist please change the notification type to use Storage Settings to unmount storages.\nThe error:\n%2$s.\nThe cause:\n%3$s.</string>
+    <string name="error_unmount_text_SecurityException">Due to security restrictions cannot unmount storage with the path: \"%s\".\nPlease change the notification type to use Storage Settings to unmount storages.</string>
     <string name="error_mount_title">Mounting storage failed</string>
     <string name="error_mount_detach_text">Cannot mount storage with the path: \"%s\".\nTry to detach and attach again your device.</string>
     <string name="error_mount_text">Cannot mount storage. Try again later.\nIf the error persist please uncheck the quick storage access.\nThe error:\n%1$s.\nThe cause:\n%2$s.</string>

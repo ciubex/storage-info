@@ -18,6 +18,7 @@
  */
 package ro.ciubex.storageinfo.util;
 
+import java.io.Closeable;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -31,6 +32,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.database.Cursor;
 import android.os.IBinder;
 import android.util.AndroidRuntimeException;
 import android.util.Log;
@@ -60,6 +62,7 @@ public class Utils {
 	private static Method METHOD_StorageVolume_isRemovable;
 	private static Method METHOD_StorageVolume_isPrimary;
 	private static Method METHOD_StorageVolume_isEmulated;
+	private static Method METHOD_StorageVolume_getState;
 
 	static {
 		try {
@@ -111,6 +114,8 @@ public class Utils {
 					METHOD_StorageVolume_isPrimary = method;
 				} else if ("isEmulated".equals(methodName)) {
 					METHOD_StorageVolume_isEmulated = method;
+				} else if ("getState".equals(methodName)) {
+					METHOD_StorageVolume_getState = method;
 				}
 			}
 		} catch (Exception e) {
@@ -292,7 +297,9 @@ public class Utils {
 					} else if (METHOD_StorageVolume_getDescription != null) {
 						volume.setDescription(getStorageVolumeDescription(obj, context));
 					}
-					if (METHOD_IMountService_getVolumeState != null) {
+					if (METHOD_StorageVolume_getState != null) {
+						volume.setVolumeState((String) invoke(METHOD_StorageVolume_getState, obj));
+					} else if (METHOD_IMountService_getVolumeState != null) {
 						volume.setVolumeState(getVolumeState(mountService,
 								volume.getPath()));
 					}
@@ -385,5 +392,30 @@ public class Utils {
 		if (object instanceof CharSequence)
 			return ((CharSequence) object).length() == 0;
 		return object == null;
+	}
+
+	/**
+	 * Close a closeable object.
+	 *
+	 * @param closeable Object to be close.
+	 */
+	public static void doClose(Object closeable) {
+		if (closeable instanceof Closeable) {
+			try {
+				((Closeable) closeable).close();
+			} catch (RuntimeException rethrown) {
+				throw rethrown;
+			} catch (Exception e) {
+				Log.e(TAG, "doClose Exception: " + e.getMessage(), e);
+			}
+		} else if (closeable instanceof Cursor) {
+			try {
+				((Cursor) closeable).close();
+			} catch (RuntimeException rethrown) {
+				throw rethrown;
+			} catch (Exception e) {
+				Log.e(TAG, "doClose Exception: " + e.getMessage(), e);
+			}
+		}
 	}
 }

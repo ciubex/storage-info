@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    android:summary="@string/settings_summary"
-    android:title="@string/settings_title" >
+                  android:summary="@string/settings_summary"
+                  android:title="@string/settings_title">
 
     <Preference
         android:key="showStorageInfo"
         android:persistent="false"
         android:summary="@string/show_storage_info_desc"
-        android:title="@string/show_storage_info" />
+        android:title="@string/show_storage_info"/>
 
-    <PreferenceCategory android:title="@string/general_settings" >
+    <PreferenceCategory android:title="@string/general_settings">
         <CheckBoxPreference
             android:defaultValue="true"
             android:key="enableNotifications"
             android:summary="@string/enable_notifications_desc"
-            android:title="@string/enable_notifications" />
+            android:title="@string/enable_notifications"/>
 
         <ListPreference
             android:defaultValue="0"
@@ -23,7 +23,28 @@
             android:entryValues="@array/notification_type_values"
             android:key="notificationType"
             android:summary="@string/notification_type_desc"
-            android:title="@string/notification_type" />
+            android:title="@string/notification_type"/>
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:dependency="enableNotifications"
+            android:key="hideUnmountConfirmation"
+            android:summary="@string/hide_unmount_confirmation_desc"
+            android:title="@string/hide_unmount_confirmation_title"/>
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:dependency="enableNotifications"
+            android:key="checkPrimaryVolume"
+            android:summary="@string/check_primary_volume_desc"
+            android:title="@string/check_primary_volume_title"/>
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:dependency="enableNotifications"
+            android:key="checkEmulatedVolume"
+            android:summary="@string/check_emulated_volume_desc"
+            android:title="@string/check_emulated_volume_title"/>
 
         <MultiSelectListPreference
             android:defaultValue="@array/empty_array"
@@ -32,43 +53,41 @@
             android:entryValues="@array/empty_array"
             android:key="disabledPaths"
             android:summary="@string/disabled_paths_desc"
-            android:title="@string/disabled_paths" />
+            android:title="@string/disabled_paths"/>
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/other" >
+    <PreferenceCategory android:title="@string/other">
         <Preference
             android:dependency="enableNotifications"
             android:key="setFileManager"
             android:persistent="false"
             android:summary="@string/file_manager_desc"
-            android:title="@string/file_manager" />
+            android:title="@string/file_manager"/>
         <Preference
             android:dependency="enableNotifications"
             android:key="toggleNotification"
             android:persistent="false"
             android:summary="@string/toggle_notification_desc"
-            android:title="@string/toggle_notification" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="debuggingEnabled"
-            android:summary="@string/enable_debugging_desc"
-            android:title="@string/enable_debugging" />
-
+            android:title="@string/toggle_notification"/>
         <Preference
             android:key="showLicense"
             android:persistent="false"
             android:summary="@string/show_license_desc"
-            android:title="@string/show_license" />
+            android:title="@string/show_license"/>
         <Preference
             android:key="showAbout"
             android:persistent="false"
             android:summary="@string/about_desc"
-            android:title="@string/about" />
+            android:title="@string/about"/>
+        <Preference
+            android:key="sendDebugReport"
+            android:persistent="false"
+            android:summary="@string/send_debug_desc"
+            android:title="@string/send_debug_title"/>
         <Preference
             android:key="makeDonation"
             android:persistent="false"
             android:summary="@string/donate_btn_message"
-            android:title="@string/donate_btn_title" />
+            android:title="@string/donate_btn_title"/>
     </PreferenceCategory>
 
 </PreferenceScreen>
