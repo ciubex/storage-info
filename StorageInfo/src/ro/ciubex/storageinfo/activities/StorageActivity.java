@@ -230,20 +230,33 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 	 * @param path The path for which was encountered the exception.
 	 */
 	private void handleUnmountException(Exception e, String path) {
-		if (e.getCause() instanceof SecurityException ||
-				(e.getCause() != null && e.getCause().getCause() instanceof SecurityException)) {
+		if (isSecurityException(e.getCause())) {
 			mApplication.showExceptionMessage(
 					this,
 					getString(R.string.error_unmount_title),
 					getString(R.string.error_unmount_text_SecurityException, path));
 		} else {
+			String cause = (e.getCause() != null) ? String.valueOf(e.getCause().getCause()) :
+					String.valueOf(e.getCause());
 			mApplication.showExceptionMessage(
 					this,
 					getString(R.string.error_unmount_title),
-					getString(R.string.error_unmount_text, path, e
-							.getMessage(), (e.getCause() != null) ? e
-							.getCause().getCause() : "null"));
+					getString(R.string.error_unmount_text, path, e.getMessage(), cause));
 		}
+	}
+
+	/**
+	 * Check if the cause of throwable is a Security Exception.
+	 * @param cause The exception cause.
+	 * @return True if is a Security Exception.
+	 */
+	private boolean isSecurityException(Throwable cause) {
+		if (cause instanceof SecurityException) {
+			return true;
+		} else if (cause.getCause() != null) {
+			return isSecurityException(cause.getCause());
+		}
+		return false;
 	}
 
 	/**
@@ -275,19 +288,18 @@ public class StorageActivity extends Activity implements DialogButtonListener {
 	 * @param path The path for which was encountered the exception.
 	 */
 	private void handleMountException(Exception e, String path) {
-		if (e.getCause() instanceof SecurityException ||
-				(e.getCause() != null && e.getCause().getCause() instanceof SecurityException)) {
+		if (isSecurityException(e.getCause())) {
 			mApplication.showExceptionMessage(
 					this,
 					getString(R.string.error_mount_title),
 					getString(R.string.error_mount_text_SecurityException, path));
 		} else {
+			String cause = (e.getCause() != null) ? String.valueOf(e.getCause().getCause()) :
+					String.valueOf(e.getCause());
 			mApplication.showExceptionMessage(
 					this,
 					getString(R.string.error_mount_title),
-					getString(R.string.error_mount_text, path, e
-							.getMessage(), (e.getCause() != null) ? e
-							.getCause().getCause() : "null"));
+					getString(R.string.error_mount_text, path, e.getMessage(), cause));
 		}
 	}
 
