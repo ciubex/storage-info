@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ro.ciubex.storageinfo"
-    android:versionCode="34"
-    android:versionName="3.7.3" >
+    android:versionCode="35"
+    android:versionName="3.7.4" >
 
     <uses-sdk
         android:minSdkVersion="12"
@@ -20,6 +20,7 @@
         <activity
             android:name="ro.ciubex.storageinfo.activities.StorageInfoPreferences"
             android:label="@string/settings"
+            android:taskAffinity=".StorageInfoPreferences"
             android:launchMode="singleTask" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,12 +31,16 @@
         <activity
             android:name="ro.ciubex.storageinfo.activities.StorageActivity"
             android:label="@string/confirm_unmount_title"
+            android:taskAffinity=".StorageActivity"
+            android:excludeFromRecents="true"
             android:theme="@android:style/Theme.Dialog" />
         <activity
             android:name="ro.ciubex.storageinfo.activities.LicenseActivity"
+            android:taskAffinity=".LicenseActivity"
             android:label="@string/license" />
         <activity
             android:name="ro.ciubex.storageinfo.activities.AboutActivity"
+            android:taskAffinity=".AboutActivity"
             android:label="@string/about_storage_info" />
 
         <receiver
