@@ -67,9 +67,9 @@
 
     <string name="send_debug_title">Send debugging logs</string>
     <string name="send_debug_desc">Send an e-mail with debugging files</string>
-    <string name="send_debug_confirmation">Do you want to send a debugging report?\nYour default e-mail application will send an e-mail with two files attached, please fill a short description of your issues if is necessary.\nThank you!</string>
+    <string name="send_debug_confirmation">Do you want to send a debugging report?\nYour default e-mail application will send an e-mail with two files attached, please fill a short description of your issues.\nThank you!</string>
     <string name="send_debug_email_title">Debugging logs for Storage Info</string>
-    <string name="report_body">Description: </string>
+    <string name="report_body">Before send this message check:\n1. you read it the application description;\n2. the message should have an archive attached;\n3. write a description in English with your issue bellow.\nOtherwise I will not be able to answer you!</string>
     <string name="send_report">Send report&#8230;</string>
 
     <string-array name="empty_array" />
